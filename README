@@ -1,0 +1,23 @@
+Archvsync
+=========
+
+This is the centralized archvsync configuration. It is a simple git
+repository that is currently hosted on ftp-master.debian.org AKA ries.
+
+
+Use the following conventions in here:
+
+ - As much as possible should be in the master branch (and as such
+   affect every machine).
+
+ - Use machine specific branches for those things that *have* to be
+   machine specific. Examples for such cases are the
+   .ssh/authorized_keys files as well as the actual list of hosts to
+   push to / mirror from.
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!! NOTE: Do NOT store ssh private keys or any kind of passwords in     !!!
+!!! here. The existance of etc/secrets is just for the existance of the !!!
+!!! directory. Nothing more.                                            !!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
