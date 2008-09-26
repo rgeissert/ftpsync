@@ -1,0 +1,31 @@
+# Little common functions
+
+# push a mirror attached to us.
+# Arguments:
+# $1 - Name for the mirror, also basename for the logfile
+# $2 - Hostname to push to
+# $3 - Username there
+# $4 - Protocol version, either 1 or 2.
+# $5 - the ssh private key file to use for this push
+# $6 - any other option ssh accepts, passed blindly, be careful
+#
+# This function assumes that the variable LOG is set to a directory where
+# logfiles can be written to.
+# Pushes will be done in background.
+signal () {
+	if [ $# -lt 5 ]; then
+		echo "Called with only $# parameters, expect at least 5"
+		return 2
+	fi
+
+	# Defaults we always want, no matter what
+	SSH_OPTIONS="-o BatchMode=yes -o SetupTimeOut=45 -o ConnectTimeout=45 -o PasswordAuthentication=no"
+
+	if [ $# -eq 6 ]; then
+		# The sixth sense^Wparameter, add it
+		SSH_OPTIONS="$SSH_OPTIONS $6"
+	fi
+
+	# Finally call ssh
+	ssh $SSH_OPTIONS -i "$5" -o"user $3" -$4 "$2" sleep 1 >> ${LOG}/$1.log 2>&1 &
+}
