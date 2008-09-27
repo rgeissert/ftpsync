@@ -44,10 +44,10 @@ mkdir -p ${LOG}
 cd ${HOME}
 umask 002
 
-trap 'log "Mirrorpush done"; ${SAVELOG} "${LOG}" > /dev/null' EXIT
+trap 'log "Mirrorpush done"; ${SAVELOG} "${LOG}/runmirrors" > /dev/null' EXIT
 
 # Start log by redirecting everything there.
-exec >"${LOG}" 2>&1
+exec >"${LOG}/runmirrors" 2>&1
 
 log "Pushing leaf mirrors"
 
