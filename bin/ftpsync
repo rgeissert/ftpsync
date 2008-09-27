@@ -125,9 +125,7 @@ touch "${UPDATEREQUIRED}"
 
 # If we are here for the first time, create the
 # destination and the trace directory
-if [ ! -d "${TO}/project/trace/" ]; then
-  mkdir -p ${TO}/project/trace
-fi
+mkdir -p ${TO}/project/trace
 
 # Check to see if another sync is in progress
 if ${LOCKFILE} -! -l 43200 -r 0 "${LOCK}"; then
@@ -154,7 +152,9 @@ while [ -e "${UPDATEREQUIRED}" ]; do
 		${RSYNC_USER}@${RSYNC_HOST}::${RSYNC_PATH} ${TO}
 
 	result=$?
-	if [ $result -eq 0 ]; then
+	# 24 - vanished source files. Ignore, that should be the target of $UPDATEREQUIRED
+	# and us re-running.
+	if [ $result -eq 0 || $result -eq 24 ]; then
 		# We are lucky, it worked. Now do step 2 and sync again, this time including
 		# the packages/releases files
 		${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS2} ${EXCLUDE} ${SOURCE_EXCLUDE} \
