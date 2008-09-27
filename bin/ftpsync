@@ -1,0 +1,183 @@
+#! /bin/bash
+
+set -e
+
+# ftpsync script for Debian
+# Based losely on a number of existing scripts, written by an
+# unknown number of different people over the years.
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation; version 2.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
+
+# Read our config file
+NAME="`basename $0`"
+. ${HOME}/etc/${NAME}.conf
+
+########################################################################
+# Config options go here. Feel free to overwrite them in the config    #
+# file if you need to.                                                 #
+# On debian.org machines the defaults should be ok.                    #
+#                                                                      #
+# The following extra variables can be defined in the config file:     #
+#                                                                      #
+# ARCH_EXCLUDE                                                         #
+#  can be used to exclude a complete architecture from                 #
+# mirrorring. Use as space seperated list.                             #
+# Possible values are:                                                 #
+# alpha, amd64, arm, armel, hppa, hurd-i386, i386, ia64,               #
+# m68k, mipsel, mips, powerpc, s390, sh, sparc and source              #
+# eg. ARCH_EXCLUDE="alpha arm armel mipsel mips s390 sparc"            #
+#                                                                      #
+# An unset value will mirror all architectures                         #
+########################################################################
+
+########################################################################
+# There should be nothing to edit here, use the config file            #
+########################################################################
+HOSTNAME=${HOSTNAME:-`hostname -f`}
+LOGDIR=${LOG:-"${HOME}/log"}
+LOG=${LOG:-"${LOGDIR}/$0.log"}
+TO="/org/ftp.debian.org/ftp/"
+
+# used by log()
+PROGRAM=${PROGRAM:-"ftpsync-kassia"}
+
+# Where to send mails about mirroring to?
+MAILTO=${MAILTO:-"joerg@debian.org"}
+
+SAVELOG=${SAVELOG:-"savelog -t -c 14"}
+LOCKFILE=${LOCKFILE:-"lockfile"}
+
+LOCK=${LOCK:-"${TO}/Archive-Update-in-Progress-${HOSTNAME}"}
+UPDATEREQUIRED="${TO}/Archive-Update-Required-${HOSTNAME}"
+TRACE=${TRACE:-"project/trace/${HOSTNAME}"}
+
+RSYNC=${RSYNC:-rsync}
+# Default rsync options for *every* rsync call
+RSYNC_OPTIONS=${RSYNC_OPTIONS:-"-rltvHSB8192 --timeout 3600 --stats --exclude ${LOCK} --exclude ${TRACE} --exclude ${UPDATEREQUIRED}"}
+# Options we only use in the first pass, where we do not want packages/sources to fly in yet
+RSYNC_OPTIONS1=${RSYNC_OPTIONS1:-"--exclude Packages* --exclude Sources* --exclude Release* --exclude ls-lR*"}
+# Options for the second pass, where we do want everything
+RSYNC_OPTIONS2=${RSYNC_OPTIONS2:-"--max-delete=40000 --delay-updates --delete --delete-after"}
+# Which rsync share to use?
+RSYNC_PATH=${RSYNC_PATH:-"ftp"}
+
+# General excludes. Dont list architecture specific stuff here, use ARCH_EXCLUDE for that!
+EXCLUDE=${EXCLUDE:-""}
+
+# The temp directory used by rsync --delay-updates is not
+# world-readable remotely. Always exclude it to avoid errors. 
+EXCLUDE="${EXCLUDE} --exclude .~tmp~/"
+
+# Check for some environment variables
+if [ -z "${TO}" ] || [ -z "${RSYNC_HOST}" ] || [ -z "${FROM}" ]; then
+	error "One of the TO, RSYNC_HOST or FROM variables seems to be empty"
+	exit 2
+fi
+
+SOURCE_EXCLUDE=
+# Exclude architectures defined in $ARCH_EXCLUDE
+for ARCH in ${ARCH_EXCLUDE}; do
+    EXCLUDE=${EXCLUDE}"\
+                --exclude binary-${ARCH}/ \
+                --exclude disks-${ARCH}/ \
+                --exclude installer-${ARCH}/ \
+                --exclude Contents-${ARCH}.gz \
+                --exclude Contents-${ARCH}.diff/ \
+                --exclude arch-${ARCH}.files \
+                --exclude arch-${ARCH}.list.gz \
+                --exclude *_${ARCH}.deb \
+                --exclude *_${ARCH}.udeb "
+    if [ "${ARCH}" = "source" ]; then
+        SOURCE_EXCLUDE="\
+                --exclude source/ \
+                --exclude *.tar.gz \
+                --exclude *.diff.gz \
+                --exclude *.dsc "
+    fi
+done
+
+# Some sane defaults
+cd ${HOME}
+umask 002
+
+# Used to make sure we will have the archive fully and completly synced before
+# we stop, even if we get multiple pushes while this script is running.
+# Otherwise we can end up with a half-synced archive:
+# - get a push
+# - sync, while locked
+# - get another push. Of course no extra sync run then happens.
+# - done. Archive not correctly synced, we don't have all the changes from the second push.
+touch "${UPDATEREQUIRED}"
+
+# If we are here for the first time, create the
+# destination and the trace directory
+if [ ! -d "${TO}/project/trace/" ]; then
+  mkdir -p ${TO}/project/trace
+fi
+
+# Check to see if another sync is in progress
+if ${LOCKFILE} -! -l 43200 -r 0 "${LOCK}"; then
+        error "Unable to start rsync, lock file still exists"
+        exit 1
+fi
+trap 'rm -f ${LOCK}; log "Mirrorsync done"; ${SAVELOG} "$LOG" > /dev/null' EXIT  
+
+# Start log by redirecting everything there.
+exec >"$LOG" 2>&1
+log "Mirrorsync start"
+
+log "Acquired main lock"
+
+export RSYNC_PASSWORD
+
+# Now do the actual mirroring, and run as long as we have an updaterequired file.
+while [ -e "${UPDATEREQUIRED}" ]; do
+	log "Running mirrorsync, update is required, ${UPDATEREQUIRED} exists"
+	rm -f "${UPDATEREQUIRED}"
+
+	# Step one, sync everything except Packages/Releases
+	${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS1} ${EXCLUDE} ${SOURCE_EXCLUDE} \
+		${RSYNC_USER}@${RSYNC_HOST}::${RSYNC_PATH} ${TO}
+
+	result=$?
+	if [ $result -eq 0 ]; then
+		# We are lucky, it worked. Now do step 2 and sync again, this time including
+		# the packages/releases files
+		${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS2} ${EXCLUDE} ${SOURCE_EXCLUDE} \
+			${RSYNC_USER}@${RSYNC_HOST}::${RSYNC_PATH} ${TO}
+		result=$?
+		if [ $result -ne 0 ]; then
+			error "ERROR: Sync step 2 went wrong, got errorcode ${result}. Logfile: ${LOG}"
+			exit 4
+		fi
+	else
+		error "ERROR: Sync step 1 went wrong, got errorcode ${result}. Logfile: ${LOG}"
+		exit 3
+	fi
+done
+
+if [ -d "${TO}/project/trace" ]; then
+      date -u > "${TO}/project/trace/${HOSTNAME}"
+fi
+
+log "Trigger slave mirrors"
+${HOME}/runmirrors
+
+# Finally, all done. Mail the log, exit.
+if [ -n "${MAILTO}" ]; then
+	mail -e -s "${PROGRAM} ($(hostname)) - archive sync finished on $(date +"+%Y.%m.%d-%H:%M:%S")" ${MAILTO} < ${LOG}
+fi
+
+rm -f $LOCK

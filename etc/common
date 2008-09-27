@@ -29,3 +29,24 @@ signal () {
 	# Finally call ssh
 	ssh $SSH_OPTIONS -i "$5" -o"user $3" -$4 "$2" sleep 1 >> ${LOG}/$1.log 2>&1 &
 }
+
+
+# log something (basically echo it together with a timestamp)
+#
+# Set $PROGRAM to a string to have it added to the output.
+log () {
+	if [ -z ${PROGRAM} ]; then
+		echo "$(date +"%b %d %H:%M:%S") $(hostname -s) [$$] $@"
+	else
+		echo "$(date +"%b %d %H:%M:%S") $(hostname -s) ${PROGRAM}[$$]: $@"
+	fi
+}
+
+# log the message using log() but then also send a mail
+# to the address configured in MAILTO (if non-empty)
+error () {
+	log "$@"
+	if [ -z ${MAILTO} ]; then
+		echo "$@" | mail -e -s "$PROGRAM ERROR ($(hostname -s)) [$$]" ${MAILTO}
+	fi
+}
