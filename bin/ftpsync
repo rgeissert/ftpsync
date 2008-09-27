@@ -48,7 +48,7 @@ NAME="`basename $0`"
 # There should be nothing to edit here, use the config file            #
 ########################################################################
 HOSTNAME=${HOSTNAME:-`hostname -f`}
-LOGDIR=${LOG:-"${HOME}/log"}
+LOGDIR=${LOGDIR:-"${HOME}/log"}
 LOG=${LOG:-"${LOGDIR}/$0.log"}
 TO="/org/ftp.debian.org/ftp/"
 
