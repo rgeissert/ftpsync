@@ -1,0 +1,89 @@
+#! /bin/bash
+
+set -e
+
+# runmirrors script for Debian
+# Based losely on existing scripts, written by an unknown number of
+# different people over the years.
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation; version 2.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
+# Read our config file
+NAME="`basename $0`"
+. ${HOME}/etc/${NAME}.conf
+
+# Make sure some variables are always in the environment
+export HOME LOGNAME USER PATH
+
+# Source our common functions
+. ${HOME}/etc/common
+
+# Set sane defaults if the configfile didn't do that for us.
+LOGDIR=${LOGDIR:-"${HOME}/log"}
+LOG=${LOG:-"${LOGDIR}/$0.log"}
+SAVELOG=${SAVELOG:-"savelog -t -c 14"}
+# used by log()
+PROGRAM=${PROGRAM:-"ftpsync-$(hostname -s)"}
+
+
+# Make sure we have our log directory
+mkdir -p ${LOG}
+
+# Some sane defaults
+cd ${HOME}
+umask 002
+
+trap 'log "Mirrorpush done"; ${SAVELOG} "${LOG}" > /dev/null' EXIT
+
+# Start log by redirecting everything there.
+exec >"${LOG}" 2>&1
+
+log "Pushing leaf mirrors"
+
+# Set the HOOKSCRIPT variable in the config file if you want to run an
+# extra script right before the mirrors get pushed
+if [ -n ${HOOKSCRIPT} ]; then
+	log "Running hook ${HOOKSCRIPT}"
+	${HOOKSCRIPT}
+	log "Hook finished with errorcode $?"
+fi
+
+# From here on we do *NOT* want to exit on errors. We don't want to
+# stop pushing mirrors just because we can't reach one atm.
+set +e
+
+# Now read our mirrorfile and push the mirrors defined in there.
+# We use grep to easily sort out all lines having a # in front of them.
+grep -v ^# ${HOME}/etc/runmirrors.mirror |
+while read MLNAME MHOSTNAME MUSER MPROTO MKEYFILE; do
+	# Process the two options that can be left blank in the config
+	if [ -z ${MPROTO} ]; then
+		MPROTO=2
+	fi
+	if [ -z ${MKEYFILE} ]; then
+		MKEYFILE="${HOME}/${KEYFILE}"
+	fi
+	# Now, people can do stupid things and leave out the protocol, but
+	# define a keyfile...
+	if [ ${MPROTO} -ne 1 ] && [ ${MPROTO} -ne 2 ]; then
+		error "Need a correct ssh protocol version for ${MLNAME}, skipping"
+		continue
+	fi
+
+	# And finally, push the mirrors
+	log "Trigger ${MLNAME}"
+	signal ${MLNAME} ${MHOSTNAME} ${MUSER} ${MPROTO} ${MKEYFILE}
+done
+
+exit 0
