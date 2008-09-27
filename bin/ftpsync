@@ -49,7 +49,7 @@ NAME="`basename $0`"
 ########################################################################
 HOSTNAME=${HOSTNAME:-`hostname -f`}
 LOGDIR=${LOGDIR:-"${HOME}/log"}
-LOG=${LOG:-"${LOGDIR}/$0.log"}
+LOG=${LOG:-"${LOGDIR}/${NAME}.log"}
 TO="/org/ftp.debian.org/ftp/"
 
 # used by log()
