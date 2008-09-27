@@ -154,7 +154,7 @@ while [ -e "${UPDATEREQUIRED}" ]; do
 	result=$?
 	# 24 - vanished source files. Ignore, that should be the target of $UPDATEREQUIRED
 	# and us re-running.
-	if [ $result -eq 0 || $result -eq 24 ]; then
+	if [ $result -eq 0 ] || [ $result -eq 24 ]; then
 		# We are lucky, it worked. Now do step 2 and sync again, this time including
 		# the packages/releases files
 		${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS2} ${EXCLUDE} ${SOURCE_EXCLUDE} \
