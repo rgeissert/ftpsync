@@ -83,8 +83,8 @@ EXCLUDE=${EXCLUDE:-""}
 EXCLUDE="${EXCLUDE} --exclude .~tmp~/"
 
 # Check for some environment variables
-if [ -z "${TO}" ] || [ -z "${RSYNC_HOST}" ] || [ -z "${FROM}" ]; then
-	error "One of the TO, RSYNC_HOST or FROM variables seems to be empty"
+if [ -z "${TO}" ] || [ -z "${RSYNC_HOST}" ] || [ -z "${RSYNC_PATH}" ]; then
+	error "One of the TO, RSYNC_HOST or RSYNC_PATH variables seems to be empty"
 	exit 2
 fi
 
