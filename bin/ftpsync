@@ -175,7 +175,7 @@ if [ -d "${TO}/project/trace" ]; then
 fi
 
 log "Trigger slave mirrors"
-${HOME}/runmirrors
+${HOME}/bin/runmirrors
 
 # Finally, all done. Mail the log, exit.
 if [ -n "${MAILTO}" ]; then
