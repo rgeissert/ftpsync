@@ -51,7 +51,7 @@ LOG=${LOG:-"${LOGDIR}/$0.log"}
 TO="/org/ftp.debian.org/ftp/"
 
 # used by log()
-PROGRAM=${PROGRAM:-"ftpsync-kassia"}
+PROGRAM=${PROGRAM:-"ftpsync-$(hostname -s)"}
 
 # Where to send mails about mirroring to?
 MAILTO=${MAILTO:-"joerg@debian.org"}
