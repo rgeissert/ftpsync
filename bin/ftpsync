@@ -65,7 +65,7 @@ TO=${TO:-"/org/ftp.debian.org/ftp/"}
 PROGRAM=${PROGRAM:-"${NAME}-$(hostname -s)"}
 
 # Where to send mails about mirroring to?
-MAILTO=${MAILTO:-"joerg@debian.org"}
+MAILTO=${MAILTO:-"mirrorlogs@debian.org"}
 
 # How to rotate our log
 SAVELOG=${SAVELOG:-"savelog -t -c 14"}
