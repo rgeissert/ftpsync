@@ -24,6 +24,11 @@ set -e
 
 # Read our config file
 NAME="`basename $0`"
+
+# In case we are called with an argument we look for a different configuration.
+if [ -n $1 ];
+	NAME="${NAME}-$1"
+fi
 . ${HOME}/etc/${NAME}.conf
 
 ########################################################################
@@ -140,6 +145,13 @@ log "Mirrorsync start"
 
 log "Acquired main lock"
 
+if [ -n ${HOOK1} ]; then
+	log "Running hook1: ${HOOK1}"
+	${HOOK1}
+	result=$?
+	log "Back from hook1, got returncode ${result}"
+fi
+
 export RSYNC_PASSWORD
 
 # Now do the actual mirroring, and run as long as we have an updaterequired file.
@@ -152,15 +164,30 @@ while [ -e "${UPDATEREQUIRED}" ]; do
 		${RSYNC_USER}@${RSYNC_HOST}::${RSYNC_PATH} ${TO}
 
 	result=$?
-	# 24 - vanished source files. Ignore, that should be the target of $UPDATEREQUIRED
-	# and us re-running.
+	# 24 - vanished source files. Ignored, that should be the target of $UPDATEREQUIRED
+	# and us re-running. If it's not, uplink is broken anyways.
 	if [ $result -eq 0 ] || [ $result -eq 24 ]; then
+
+		if [ -n ${HOOK2} ]; then
+			log "Running hook2: ${HOOK1}"
+			${HOOK2}
+			result=$?
+			log "Back from hook1, got returncode ${result}"
+		fi
+
 		# We are lucky, it worked. Now do step 2 and sync again, this time including
 		# the packages/releases files
 		${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS2} ${EXCLUDE} ${SOURCE_EXCLUDE} \
 			${RSYNC_USER}@${RSYNC_HOST}::${RSYNC_PATH} ${TO}
 		result=$?
-		if [ $result -ne 0 ]; then
+		if [ $result -eq 0 ] || [ $result -eq 24 ]; then
+			if [ -n ${HOOK3} ]; then
+				log "Running hook3: ${HOOK1}"
+				${HOOK3}
+				result=$?
+				log "Back from hook3, got returncode ${result}"
+			fi
+		else
 			error "ERROR: Sync step 2 went wrong, got errorcode ${result}. Logfile: ${LOG}"
 			exit 4
 		fi
@@ -174,8 +201,25 @@ if [ -d "${TO}/project/trace" ]; then
       date -u > "${TO}/project/trace/${HOSTNAME}"
 fi
 
-log "Trigger slave mirrors"
-${HOME}/bin/runmirrors
+if [ -n ${HOOK4} ]; then
+	log "Running hook4: ${HOOK1}"
+	${HOOK4}
+	result=$?
+	log "Back from hook4, got returncode ${result}"
+fi
+
+if [ x${HUB} = "xtrue" ]; then
+	log "Trigger slave mirrors"
+	${HOME}/bin/runmirrors
+	log "Trigger slave done"
+
+	if [ -n ${HOOK5} ]; then
+		log "Running hook5: ${HOOK1}"
+		${HOOK5}
+		result=$?
+		log "Back from hook5, got returncode ${result}"
+	fi
+fi
 
 # Finally, all done. Mail the log, exit.
 if [ -n "${MAILTO}" ]; then
