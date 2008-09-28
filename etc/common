@@ -28,7 +28,7 @@ signal () {
 
 	# Finally call ssh
 	date -u >> ${LOGDIR}/$1.log
-	ssh $SSH_OPTIONS -i "$5" -o"user $3" -$4 "$2" sleep 1 >> ${LOGDIR}/$1.log 2>&1 &
+	ssh $SSH_OPTIONS -i "$5" -o"user $3" -$4 "$2" sleep 1 >>${LOGDIR}/$1.log 2>&1 &
 }
 
 

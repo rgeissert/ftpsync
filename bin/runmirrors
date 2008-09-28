@@ -56,18 +56,15 @@ mkdir -p ${LOGDIR}
 cd ${HOME}
 umask 002
 
-trap 'log "Mirrorpush done"; ${SAVELOG} "${LOG}" > /dev/null' EXIT
+trap 'log "Mirrorpush done" >> ${LOG}; ${SAVELOG} "${LOG}" > /dev/null' EXIT
 
-# Start log by redirecting everything there.
-exec >"${LOG}" 2>&1
-
-log "Pushing leaf mirrors"
+log "Pushing leaf mirrors" >> ${LOG}
 
 if [ -n "${HOOK1}" ]; then
-	log "Running hook1: ${HOOK1}"
+	log "Running hook1: ${HOOK1}" >> ${LOG}
 	${HOOK1}
 	result=$?
-	log "Back from hook1, got returncode ${result}"
+	log "Back from hook1, got returncode ${result}" >> ${LOG}
 fi
 
 # From here on we do *NOT* want to exit on errors. We don't want to
@@ -80,7 +77,7 @@ egrep -v '^[[:space:]]*(#|$)' ${MIRRORS} |
 while read MLNAME MHOSTNAME MUSER MPROTO MKEYFILE; do
 	if [ "x${MLNAME}x" = "xDELAYx" ]; then
 		# We should wait a bit.
-		log "Delay of ${DELAY} seconds requested, sleeping"
+		log "Delay of ${DELAY} seconds requested, sleeping" >> ${LOG}
 		sleep ${DELAY}
 		continue
 	fi
@@ -95,27 +92,27 @@ while read MLNAME MHOSTNAME MUSER MPROTO MKEYFILE; do
 	# Now, people can do stupid things and leave out the protocol, but
 	# define a keyfile...
 	if [ ${MPROTO} -ne 1 ] && [ ${MPROTO} -ne 2 ]; then
-		error "Need a correct ssh protocol version for ${MLNAME}, skipping"
+		error "Need a correct ssh protocol version for ${MLNAME}, skipping" >> ${LOG}
 		continue
 	fi
 
 	# And finally, push the mirror
-	log "Trigger ${MLNAME}"
+	log "Trigger ${MLNAME}" >> ${LOG}
 	signal ${MLNAME} ${MHOSTNAME} ${MUSER} ${MPROTO} ${MKEYFILE}
-	log "Trigger for ${MLNAME} done"
+	log "Trigger for ${MLNAME} done" >> ${LOG}
 	if [ -n "${HOOK2}" ]; then
-		log "Running hook2: ${HOOK2}"
+		log "Running hook2: ${HOOK2}" >> ${LOG}
 		${HOOK1}
 		result=$?
-		log "Back from hook2, got returncode ${result}"
+		log "Back from hook2, got returncode ${result}" >> ${LOG}
 	fi
 done
 
 if [ -n "${HOOK3}" ]; then
-	log "Running hook3: ${HOOK3}"
+	log "Running hook3: ${HOOK3}" >> ${LOG}
 	${HOOK3}
 	result=$?
-	log "Back from hook3, got returncode ${result}"
+	log "Back from hook3, got returncode ${result}" >> ${LOG}
 fi
 
 exit 0
