@@ -202,7 +202,7 @@ while [ -e "${UPDATEREQUIRED}" ]; do
 done
 
 if [ -d "${TO}/project/trace" ]; then
-      date -u > "${TO}/project/trace/${HOSTNAME}"
+      date -u > "${TO}/${TRACE}"
 fi
 
 if [ -n "${HOOK4}" ]; then
