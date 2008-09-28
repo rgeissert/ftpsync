@@ -23,7 +23,7 @@ set -e
 NAME="`basename $0`"
 
 # In case we are called with an argument we look for a different configuration.
-if [ -n $1 ];
+if [ -n "$1" ]; then
 	NAME="${NAME}-$1"
 fi
 
@@ -50,20 +50,20 @@ MIRRORS=${MIRRORS:-"${HOME}/etc/${NAME}.mirror"}
 PROGRAM=${PROGRAM:-"${NAME}-$(hostname -s)"}
 
 # Make sure we have our log directory
-mkdir -p ${LOG}
+mkdir -p ${LOGDIR}
 
 # Some sane defaults
 cd ${HOME}
 umask 002
 
-trap 'log "Mirrorpush done"; ${SAVELOG} "${LOG}/runmirrors" > /dev/null' EXIT
+trap 'log "Mirrorpush done"; ${SAVELOG} "${LOG}" > /dev/null' EXIT
 
 # Start log by redirecting everything there.
-exec >"${LOG}/runmirrors" 2>&1
+exec >"${LOG}" 2>&1
 
 log "Pushing leaf mirrors"
 
-if [ -n ${HOOK1} ]; then
+if [ -n "${HOOK1}" ]; then
 	log "Running hook1: ${HOOK1}"
 	${HOOK1}
 	result=$?
@@ -80,6 +80,7 @@ egrep -v '^[[:space:]]*(#|$)' ${MIRRORS} |
 while read MLNAME MHOSTNAME MUSER MPROTO MKEYFILE; do
 	if [ "x${MLNAME}x" = "xDELAYx" ]; then
 		# We should wait a bit.
+		log "Delay of ${DELAY} seconds requested, sleeping"
 		sleep ${DELAY}
 		continue
 	fi
@@ -102,7 +103,7 @@ while read MLNAME MHOSTNAME MUSER MPROTO MKEYFILE; do
 	log "Trigger ${MLNAME}"
 	signal ${MLNAME} ${MHOSTNAME} ${MUSER} ${MPROTO} ${MKEYFILE}
 	log "Trigger for ${MLNAME} done"
-	if [ -n ${HOOK2} ]; then
+	if [ -n "${HOOK2}" ]; then
 		log "Running hook2: ${HOOK2}"
 		${HOOK1}
 		result=$?
@@ -110,7 +111,7 @@ while read MLNAME MHOSTNAME MUSER MPROTO MKEYFILE; do
 	fi
 done
 
-if [ -n ${HOOK3} ]; then
+if [ -n "${HOOK3}" ]; then
 	log "Running hook3: ${HOOK3}"
 	${HOOK3}
 	result=$?
