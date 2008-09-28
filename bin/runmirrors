@@ -21,6 +21,12 @@ set -e
 
 # Read our config file
 NAME="`basename $0`"
+
+# In case we are called with an argument we look for a different configuration.
+if [ -n $1 ];
+	NAME="${NAME}-$1"
+fi
+
 . ${HOME}/etc/${NAME}.conf
 
 # Make sure some variables are always in the environment
@@ -30,12 +36,18 @@ export HOME LOGNAME USER PATH
 . ${HOME}/etc/common
 
 # Set sane defaults if the configfile didn't do that for us.
+# The directory for our logfiles
 LOGDIR=${LOGDIR:-"${HOME}/log"}
-LOG=${LOG:-"${LOGDIR}/$0.log"}
+# Our own logfile
+LOG=${LOG:-"${LOGDIR}/${NAME}.log"}
+# How to rotate the log
 SAVELOG=${SAVELOG:-"savelog -t -c 14"}
+# Amount of delay between mirrors if the mirror file contains a DELAY
+DELAY=${DELAY:-"60"}
+# Our mirrorfile
+MIRRORS=${MIRRORS:-"${HOME}/etc/${NAME}.mirror"}
 # used by log()
-PROGRAM=${PROGRAM:-"ftpsync-$(hostname -s)"}
-
+PROGRAM=${PROGRAM:-"${NAME}-$(hostname -s)"}
 
 # Make sure we have our log directory
 mkdir -p ${LOG}
@@ -51,12 +63,11 @@ exec >"${LOG}/runmirrors" 2>&1
 
 log "Pushing leaf mirrors"
 
-# Set the HOOKSCRIPT variable in the config file if you want to run an
-# extra script right before the mirrors get pushed
-if [ -n ${HOOKSCRIPT} ]; then
-	log "Running hook ${HOOKSCRIPT}"
-	${HOOKSCRIPT}
-	log "Hook finished with errorcode $?"
+if [ -n ${HOOK1} ]; then
+	log "Running hook1: ${HOOK1}"
+	${HOOK1}
+	result=$?
+	log "Back from hook1, got returncode ${result}"
 fi
 
 # From here on we do *NOT* want to exit on errors. We don't want to
@@ -64,9 +75,15 @@ fi
 set +e
 
 # Now read our mirrorfile and push the mirrors defined in there.
-# We use grep to easily sort out all lines having a # in front of them.
-egrep -v '^[[:space:]]*(#|$)' ${HOME}/etc/runmirrors.mirror |
+# We use grep to easily sort out all lines having a # in front of them or are empty.
+egrep -v '^[[:space:]]*(#|$)' ${MIRRORS} |
 while read MLNAME MHOSTNAME MUSER MPROTO MKEYFILE; do
+	if [ "x${MLNAME}x" = "xDELAYx" ]; then
+		# We should wait a bit.
+		sleep ${DELAY}
+		continue
+	fi
+
 	# Process the two options that can be left blank in the config
 	if [ -z ${MPROTO} ]; then
 		MPROTO=2
@@ -81,9 +98,23 @@ while read MLNAME MHOSTNAME MUSER MPROTO MKEYFILE; do
 		continue
 	fi
 
-	# And finally, push the mirrors
+	# And finally, push the mirror
 	log "Trigger ${MLNAME}"
 	signal ${MLNAME} ${MHOSTNAME} ${MUSER} ${MPROTO} ${MKEYFILE}
+	log "Trigger for ${MLNAME} done"
+	if [ -n ${HOOK2} ]; then
+		log "Running hook2: ${HOOK2}"
+		${HOOK1}
+		result=$?
+		log "Back from hook2, got returncode ${result}"
+	fi
 done
+
+if [ -n ${HOOK3} ]; then
+	log "Running hook3: ${HOOK3}"
+	${HOOK3}
+	result=$?
+	log "Back from hook3, got returncode ${result}"
+fi
 
 exit 0

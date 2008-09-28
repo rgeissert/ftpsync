@@ -14,4 +14,8 @@
 # eu.puccini puccini.debian.org archvsync 2 ~/.ssh/push_puccini
 #
 # will push puccini.debian.org, user archvsync, using ssh protocol 2 and the specified ssh key.
-
+#
+# One special value is allowed: DELAY
+# This word has to be on a line itself, nothing else, not even
+# whitespace. It will trigger a pause of $DELAY seconds between the two
+# mirrors. Per default DELAY is set to 60.
