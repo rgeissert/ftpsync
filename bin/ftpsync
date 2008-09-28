@@ -77,7 +77,7 @@ LOCK=${LOCK:-"${TO}/Archive-Update-in-Progress-${HOSTNAME}"}
 # Do we need another rsync run?
 UPDATEREQUIRED="${TO}/Archive-Update-Required-${HOSTNAME}"
 # Trace file for mirror stats and checks
-TRACE=${TRACE:-"project/trace/${HOSTNAME}"}
+TRACE=${TRACE:-"project/trace/$(hostname -f)"}
 
 # rsync program
 RSYNC=${RSYNC:-rsync}
