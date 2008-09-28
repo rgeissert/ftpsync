@@ -97,11 +97,6 @@ EXCLUDE=${EXCLUDE:-""}
 # world-readable remotely. Always exclude it to avoid errors. 
 EXCLUDE="${EXCLUDE} --exclude .~tmp~/"
 
-# Check for some environment variables
-if [ -z "${TO}" ] || [ -z "${RSYNC_HOST}" ] || [ -z "${RSYNC_PATH}" ]; then
-	error "One of the TO, RSYNC_HOST or RSYNC_PATH variables seems to be empty"
-	exit 2
-fi
 
 SOURCE_EXCLUDE=
 # Exclude architectures defined in $ARCH_EXCLUDE
@@ -134,7 +129,7 @@ umask 002
 # Otherwise we can end up with a half-synced archive:
 # - get a push
 # - sync, while locked
-# - get another push. Of course no extra sync run then happens.
+# - get another push. Of course no extra sync run then happens, we are locked.
 # - done. Archive not correctly synced, we don't have all the changes from the second push.
 touch "${UPDATEREQUIRED}"
 
@@ -152,8 +147,9 @@ trap 'rm -f ${LOCK}; log "Mirrorsync done"; ${SAVELOG} "$LOG" > /dev/null' EXIT
 # Start log by redirecting everything there.
 exec >"$LOG" 2>&1
 log "Mirrorsync start"
-
 log "Acquired main lock"
+
+export RSYNC_PASSWORD
 
 if [ -n ${HOOK1} ]; then
 	log "Running hook1: ${HOOK1}"
@@ -161,8 +157,6 @@ if [ -n ${HOOK1} ]; then
 	result=$?
 	log "Back from hook1, got returncode ${result}"
 fi
-
-export RSYNC_PASSWORD
 
 # Now do the actual mirroring, and run as long as we have an updaterequired file.
 while [ -e "${UPDATEREQUIRED}" ]; do
