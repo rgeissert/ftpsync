@@ -227,7 +227,7 @@ fi
 
 # Finally, all done. Mail the log, exit.
 if [ -n "${MAILTO}" ]; then
-	mail -e -s "${PROGRAM} ($(hostname)) - archive sync finished on $(date +"+%Y.%m.%d-%H:%M:%S")" ${MAILTO} < ${LOG}
+	mail -e -s "${PROGRAM} ($(hostname)) - archive sync finished on $(date +"%Y.%m.%d-%H:%M:%S")" ${MAILTO} < ${LOG}
 fi
 
 rm -f $LOCK
