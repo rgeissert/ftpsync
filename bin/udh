@@ -10,4 +10,4 @@ cd ${HOME}/archvsync
 git pull
 
 cd ${HOME}
-~/dircombine . . ${HOME}/archvsync >/dev/null 2>&1
+~/archvsync/bin/dircombine . . ${HOME}/archvsync >/dev/null 2>&1
