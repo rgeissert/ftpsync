@@ -124,6 +124,10 @@ done
 cd ${HOME}
 umask 002
 
+# If we are here for the first time, create the
+# destination and the trace directory
+mkdir -p ${TO}/project/trace
+
 # Used to make sure we will have the archive fully and completly synced before
 # we stop, even if we get multiple pushes while this script is running.
 # Otherwise we can end up with a half-synced archive:
@@ -132,10 +136,6 @@ umask 002
 # - get another push. Of course no extra sync run then happens, we are locked.
 # - done. Archive not correctly synced, we don't have all the changes from the second push.
 touch "${UPDATEREQUIRED}"
-
-# If we are here for the first time, create the
-# destination and the trace directory
-mkdir -p ${TO}/project/trace
 
 # Check to see if another sync is in progress
 if ${LOCKFILE} -! -l 43200 -r 0 "${LOCK}"; then
