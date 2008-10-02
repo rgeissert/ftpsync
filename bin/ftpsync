@@ -158,6 +158,14 @@ if [ -n "${HOOK1}" ]; then
 	log "Back from hook1, got returncode ${result}"
 fi
 
+# Now, we might want to sync from anonymous too.
+# This is that deep in this script so hook1 could, if wanted, change things!
+if [ -z ${RSYNC_USER} ]; then
+	RSYNCPTH="${RSYNC_HOST}"
+else
+	RSYNCPTH="${RSYNC_USER}@${RSYNC_HOST}"
+fi
+
 # Now do the actual mirroring, and run as long as we have an updaterequired file.
 while [ -e "${UPDATEREQUIRED}" ]; do
 	log "Running mirrorsync, update is required, ${UPDATEREQUIRED} exists"
@@ -165,7 +173,7 @@ while [ -e "${UPDATEREQUIRED}" ]; do
 
 	# Step one, sync everything except Packages/Releases
 	${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS1} ${EXCLUDE} ${SOURCE_EXCLUDE} \
-		${RSYNC_USER}@${RSYNC_HOST}::${RSYNC_PATH} ${TO}
+		${RSYNCPTH}::${RSYNC_PATH} ${TO}
 
 	result=$?
 	# 24 - vanished source files. Ignored, that should be the target of $UPDATEREQUIRED
@@ -182,7 +190,7 @@ while [ -e "${UPDATEREQUIRED}" ]; do
 		# We are lucky, it worked. Now do step 2 and sync again, this time including
 		# the packages/releases files
 		${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS2} ${EXCLUDE} ${SOURCE_EXCLUDE} \
-			${RSYNC_USER}@${RSYNC_HOST}::${RSYNC_PATH} ${TO}
+			${RSYNCPTH}::${RSYNC_PATH} ${TO}
 		result=$?
 		if [ $result -eq 0 ] || [ $result -eq 24 ]; then
 			if [ -n "${HOOK3}" ]; then
