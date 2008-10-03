@@ -48,6 +48,8 @@ DELAY=${DELAY:-"60"}
 MIRRORS=${MIRRORS:-"${HOME}/etc/${NAME}.mirror"}
 # used by log()
 PROGRAM=${PROGRAM:-"${NAME}-$(hostname -s)"}
+# extra ssh options we might want hostwide
+SSH_OPTS=${SSH_OPTS:-""}
 
 # Make sure we have our log directory
 mkdir -p ${LOGDIR}
@@ -98,7 +100,7 @@ while read MLNAME MHOSTNAME MUSER MPROTO MKEYFILE; do
 
 	# And finally, push the mirror
 	log "Trigger ${MLNAME}" >> ${LOG}
-	signal ${MLNAME} ${MHOSTNAME} ${MUSER} ${MPROTO} ${MKEYFILE}
+	signal ${MLNAME} ${MHOSTNAME} ${MUSER} ${MPROTO} ${MKEYFILE} ${SSH_OPTS}
 	log "Trigger for ${MLNAME} done" >> ${LOG}
 	if [ -n "${HOOK2}" ]; then
 		log "Running hook2: ${HOOK2}" >> ${LOG}
