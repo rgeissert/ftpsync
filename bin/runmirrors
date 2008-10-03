@@ -100,7 +100,7 @@ while read MLNAME MHOSTNAME MUSER MPROTO MKEYFILE; do
 
 	# And finally, push the mirror
 	log "Trigger ${MLNAME}" >> ${LOG}
-	signal ${MLNAME} ${MHOSTNAME} ${MUSER} ${MPROTO} ${MKEYFILE} ${SSH_OPTS}
+	signal ${MLNAME} ${MHOSTNAME} ${MUSER} ${MPROTO} ${MKEYFILE} "${SSH_OPTS}"
 	log "Trigger for ${MLNAME} done" >> ${LOG}
 	if [ -n "${HOOK2}" ]; then
 		log "Running hook2: ${HOOK2}" >> ${LOG}
