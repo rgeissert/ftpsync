@@ -94,7 +94,7 @@ RSYNC_OPTIONS=${RSYNC_OPTIONS:-"-rltvHSB8192 --timeout 3600 --stats --exclude Ar
 # Options we only use in the first pass, where we do not want packages/sources to fly in yet and dont want to delete files
 RSYNC_OPTIONS1=${RSYNC_OPTIONS1:-"--exclude Packages* --exclude Sources* --exclude Release* --exclude ls-lR*"}
 # Options for the second pass, where we do want everything, including deletion of old and now unused files
-RSYNC_OPTIONS2=${RSYNC_OPTIONS2:-"--max-delete=40000 --delay-updates --delete --delete-after"}
+RSYNC_OPTIONS2=${RSYNC_OPTIONS2:-"--max-delete=40000 --delay-updates --delete --delete-after --delete-excluded"}
 # Which rsync share to use on our upstream mirror?
 RSYNC_PATH=${RSYNC_PATH:-"ftp"}
 
@@ -202,11 +202,15 @@ while [ -e "${UPDATEREQUIRED}" ]; do
 	log "Running mirrorsync, update is required, ${UPDATEREQUIRED} exists"
 	rm -f "${UPDATEREQUIRED}"
 
+	log "Running stage1: ${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS1} ${EXCLUDE} ${SOURCE_EXCLUDE}  ${RSYNCPTH}::${RSYNC_PATH} ${TO} >${LOGDIR}/rsync-${NAME}.log 2>${LOGDIR}/rsync-${NAME}.error"
+
 	# Step one, sync everything except Packages/Releases
 	${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS1} ${EXCLUDE} ${SOURCE_EXCLUDE} \
 		${RSYNCPTH}::${RSYNC_PATH} ${TO} >${LOGDIR}/rsync-${NAME}.log 2>${LOGDIR}/rsync-${NAME}.error
-
 	result=$?
+
+	log "Back from rsync with returncode ${result}"
+
 	# 24 - vanished source files. Ignored, that should be the target of $UPDATEREQUIRED
 	# and us re-running. If it's not, uplink is broken anyways.
 	if [ $result -eq 0 ] || [ $result -eq 24 ]; then
@@ -218,11 +222,16 @@ while [ -e "${UPDATEREQUIRED}" ]; do
 			log "Back from hook1, got returncode ${result}"
 		fi
 
+		log "Running stage2: ${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS2} ${EXCLUDE} ${SOURCE_EXCLUDE} ${RSYNCPTH}::${RSYNC_PATH} ${TO} >${LOGDIR}/rsync-${NAME}.log 2>${LOGDIR}/rsync-${NAME}.error"
+
 		# We are lucky, it worked. Now do step 2 and sync again, this time including
 		# the packages/releases files
 		${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS2} ${EXCLUDE} ${SOURCE_EXCLUDE} \
 			${RSYNCPTH}::${RSYNC_PATH} ${TO} >${LOGDIR}/rsync-${NAME}.log 2>${LOGDIR}/rsync-${NAME}.error
 		result=$?
+
+		log "Back from rsync with returncode ${result}"
+
 		if [ $result -eq 0 ] || [ $result -eq 24 ]; then
 			if [ -n "${HOOK3}" ]; then
 				log "Running hook3: ${HOOK1}"
