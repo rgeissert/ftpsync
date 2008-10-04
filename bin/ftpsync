@@ -152,7 +152,7 @@ cleanup() {
 	log "Mirrorsync done";
 	if [ -n "${MAILTO}" ]; then
         # In case rsync had something on stderr
-		if [ -s "${LOGDIR}/rsync-${NAME}.error"]; then
+		if [ -s "${LOGDIR}/rsync-${NAME}.error" ]; then
 			cat "${LOGDIR}/rsync-${NAME}.error" | mail -e -s "$PROGRAM rsync ERROR ($(hostname -s)) [$$]" ${MAILTO}
 		fi
 		if [ "x${ERRORSONLY}x" = "xfalsex" ]; then
