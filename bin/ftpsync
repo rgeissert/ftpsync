@@ -19,8 +19,14 @@ set -e
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
+# In case the admin somehow wants to have this script located someplace else,
+# he can set BASEDIR, and we will take that. If it is unset we take ${HOME}
+# How the admin sets this isn't our place to deal with. One could use a wrapper
+# for that. Or pam_env. Or whatever fits in the local setup. :)
+BASEDIR=${BASEDIR:-"${HOME}"}
+
 # Source our common functions
-. ${HOME}/etc/common
+. ${BASEDIR}/etc/common
 
 # Read our config file
 NAME="`basename $0`"
@@ -29,7 +35,7 @@ NAME="`basename $0`"
 if [ -n "$1" ]; then
 	NAME="${NAME}-$1"
 fi
-. ${HOME}/etc/${NAME}.conf
+. ${BASEDIR}/etc/${NAME}.conf
 
 ########################################################################
 # Config options go here. Feel free to overwrite them in the config    #
@@ -54,7 +60,7 @@ fi
 ########################################################################
 HOSTNAME=${HOSTNAME:-`hostname -f`}
 # Where to put logfiles in
-LOGDIR=${LOGDIR:-"${HOME}/log"}
+LOGDIR=${LOGDIR:-"${BASEDIR}/log"}
 # Our own logfile
 LOG=${LOG:-"${LOGDIR}/${NAME}.log"}
 
@@ -121,7 +127,7 @@ for ARCH in ${ARCH_EXCLUDE}; do
 done
 
 # Some sane defaults
-cd ${HOME}
+cd ${BASEDIR}
 umask 002
 
 # If we are here for the first time, create the
@@ -222,7 +228,7 @@ fi
 
 if [ x${HUB} = "xtrue" ]; then
 	log "Trigger slave mirrors"
-	${HOME}/bin/runmirrors
+	${BASEDIR}/bin/runmirrors
 	log "Trigger slave done"
 
 	if [ -n "${HOOK5}" ]; then
