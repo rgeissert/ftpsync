@@ -19,7 +19,10 @@ set -e
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-# Read our config file
+# In case the admin somehow wants to have this script located someplace else,
+# he can set BASEDIR, and we will take that. If it is unset we take ${HOME}
+BASEDIR=${BASEDIR:-"${HOME}"}
+
 NAME="`basename $0`"
 
 # In case we are called with an argument we look for a different configuration.
@@ -27,17 +30,18 @@ if [ -n "$1" ]; then
 	NAME="${NAME}-$1"
 fi
 
-. ${HOME}/etc/${NAME}.conf
+# Read our config file
+. ${BASEDIR}/etc/${NAME}.conf
 
 # Make sure some variables are always in the environment
-export HOME LOGNAME USER PATH
+export HOME LOGNAME USER PATH BASEDIR
 
 # Source our common functions
-. ${HOME}/etc/common
+. ${BASEDIR}/etc/common
 
 # Set sane defaults if the configfile didn't do that for us.
 # The directory for our logfiles
-LOGDIR=${LOGDIR:-"${HOME}/log"}
+LOGDIR=${LOGDIR:-"${BASEDIR}/log"}
 # Our own logfile
 LOG=${LOG:-"${LOGDIR}/${NAME}.log"}
 # How to rotate the log
@@ -45,7 +49,7 @@ SAVELOG=${SAVELOG:-"savelog -t -c 14"}
 # Amount of delay between mirrors if the mirror file contains a DELAY
 DELAY=${DELAY:-"60"}
 # Our mirrorfile
-MIRRORS=${MIRRORS:-"${HOME}/etc/${NAME}.mirror"}
+MIRRORS=${MIRRORS:-"${BASEDIR}/etc/${NAME}.mirror"}
 # used by log()
 PROGRAM=${PROGRAM:-"${NAME}-$(hostname -s)"}
 # extra ssh options we might want hostwide
@@ -55,7 +59,7 @@ SSH_OPTS=${SSH_OPTS:-""}
 mkdir -p ${LOGDIR}
 
 # Some sane defaults
-cd ${HOME}
+cd ${BASEDIR}
 umask 002
 
 trap 'log "Mirrorpush done" >> ${LOG}; ${SAVELOG} "${LOG}" > /dev/null' EXIT
@@ -89,7 +93,7 @@ while read MLNAME MHOSTNAME MUSER MPROTO MKEYFILE; do
 		MPROTO=2
 	fi
 	if [ -z ${MKEYFILE} ]; then
-		MKEYFILE="${HOME}/${KEYFILE}"
+		MKEYFILE="${BASEDIR}/${KEYFILE}"
 	fi
 	# Now, people can do stupid things and leave out the protocol, but
 	# define a keyfile...
