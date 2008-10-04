@@ -143,12 +143,33 @@ mkdir -p ${TO}/project/trace
 # - done. Archive not correctly synced, we don't have all the changes from the second push.
 touch "${UPDATEREQUIRED}"
 
+# All the stuff we want to do when we exit, no matter where
+cleanup() {
+	trap - ERR TERM HUP INT QUIT EXIT
+	# all done. Mail the log, exit.
+	if [ -n "${MAILTO}" ]; then
+        # In case rsync had something on stderr
+		if [ -s "${LOGDIR}/rsync-${NAME}.error"]; then
+			cat "${LOGDIR}/rsync-${NAME}.error" | mail -e -s "$PROGRAM rsync ERROR ($(hostname -s)) [$$]" ${MAILTO}
+		fi
+		# And the normal log
+		mail -e -s "${PROGRAM} ($(hostname)) - archive sync finished on $(date +"%Y.%m.%d-%H:%M:%S")" ${MAILTO} < ${LOG}
+	fi
+
+	${SAVELOG} ${LOGDIR}/rsync-${NAME}.log
+	${SAVELOG} ${LOGDIR}/rsync-${NAME}.error
+
+	log "Mirrorsync done";
+	${SAVELOG} "$LOG" > /dev/null
+	rm -f ${LOCK};
+}
+
 # Check to see if another sync is in progress
 if ${LOCKFILE} -! -l 43200 -r 0 "${LOCK}"; then
         error "Unable to start rsync, lock file still exists"
         exit 1
 fi
-trap 'rm -f ${LOCK}; log "Mirrorsync done"; ${SAVELOG} "$LOG" > /dev/null' EXIT  
+trap cleanup EXIT ERR TERM HUP INT QUIT
 
 # Start log by redirecting everything there.
 exec >"$LOG" 2>&1
@@ -179,7 +200,7 @@ while [ -e "${UPDATEREQUIRED}" ]; do
 
 	# Step one, sync everything except Packages/Releases
 	${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS1} ${EXCLUDE} ${SOURCE_EXCLUDE} \
-		${RSYNCPTH}::${RSYNC_PATH} ${TO}
+		${RSYNCPTH}::${RSYNC_PATH} ${TO} >${LOGDIR}/rsync-${NAME}.log 2>${LOGDIR}/rsync-${NAME}.error
 
 	result=$?
 	# 24 - vanished source files. Ignored, that should be the target of $UPDATEREQUIRED
@@ -196,7 +217,7 @@ while [ -e "${UPDATEREQUIRED}" ]; do
 		# We are lucky, it worked. Now do step 2 and sync again, this time including
 		# the packages/releases files
 		${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS2} ${EXCLUDE} ${SOURCE_EXCLUDE} \
-			${RSYNCPTH}::${RSYNC_PATH} ${TO}
+			${RSYNCPTH}::${RSYNC_PATH} ${TO} >${LOGDIR}/rsync-${NAME}.log 2>${LOGDIR}/rsync-${NAME}.error
 		result=$?
 		if [ $result -eq 0 ] || [ $result -eq 24 ]; then
 			if [ -n "${HOOK3}" ]; then
@@ -239,9 +260,5 @@ if [ x${HUB} = "xtrue" ]; then
 	fi
 fi
 
-# Finally, all done. Mail the log, exit.
-if [ -n "${MAILTO}" ]; then
-	mail -e -s "${PROGRAM} ($(hostname)) - archive sync finished on $(date +"%Y.%m.%d-%H:%M:%S")" ${MAILTO} < ${LOG}
-fi
-
+# All done, remove our LOCK, rest is done by cleanup hook.
 rm -f $LOCK
