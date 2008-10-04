@@ -72,6 +72,8 @@ PROGRAM=${PROGRAM:-"${NAME}-$(hostname -s)"}
 
 # Where to send mails about mirroring to?
 MAILTO=${MAILTO:-"mirrorlogs@debian.org"}
+# Want errors only or every log?
+ERRORSONLY=${ERRORSONLY:-"false"}
 
 # How to rotate our log
 SAVELOG=${SAVELOG:-"savelog -t -c 14"}
@@ -147,20 +149,22 @@ touch "${UPDATEREQUIRED}"
 cleanup() {
 	trap - ERR TERM HUP INT QUIT EXIT
 	# all done. Mail the log, exit.
+	log "Mirrorsync done";
 	if [ -n "${MAILTO}" ]; then
         # In case rsync had something on stderr
 		if [ -s "${LOGDIR}/rsync-${NAME}.error"]; then
 			cat "${LOGDIR}/rsync-${NAME}.error" | mail -e -s "$PROGRAM rsync ERROR ($(hostname -s)) [$$]" ${MAILTO}
 		fi
-		# And the normal log
-		mail -e -s "${PROGRAM} ($(hostname)) - archive sync finished on $(date +"%Y.%m.%d-%H:%M:%S")" ${MAILTO} < ${LOG}
+		if [ "x${ERRORSONLY}x" = "xfalsex" ]; then
+			# And the normal log
+			mail -e -s "${PROGRAM} ($(hostname)) - archive sync finished on $(date +"%Y.%m.%d-%H:%M:%S")" ${MAILTO} < ${LOG}
+		fi
 	fi
 
 	${SAVELOG} ${LOGDIR}/rsync-${NAME}.log
 	${SAVELOG} ${LOGDIR}/rsync-${NAME}.error
-
-	log "Mirrorsync done";
 	${SAVELOG} "$LOG" > /dev/null
+
 	rm -f ${LOCK};
 }
 
