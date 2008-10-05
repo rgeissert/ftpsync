@@ -106,7 +106,7 @@ EXCLUDE=${EXCLUDE:-""}
 EXCLUDE="${EXCLUDE} --exclude .~tmp~/"
 
 
-SOURCE_EXCLUDE=
+SOURCE_EXCLUDE=${SOURCE_EXCLUDE:-""}
 # Exclude architectures defined in $ARCH_EXCLUDE
 for ARCH in ${ARCH_EXCLUDE}; do
     EXCLUDE=${EXCLUDE}"\
@@ -120,12 +120,14 @@ for ARCH in ${ARCH_EXCLUDE}; do
                 --exclude *_${ARCH}.deb \
                 --exclude *_${ARCH}.udeb "
     if [ "${ARCH}" = "source" ]; then
-        SOURCE_EXCLUDE="\
+		if [ -z ${SOURCE_EXCLUDE} ]; then
+			SOURCE_EXCLUDE="\
                 --exclude source/ \
                 --exclude *.tar.gz \
                 --exclude *.diff.gz \
                 --exclude *.dsc "
-    fi
+		fi
+	fi
 done
 
 # Some sane defaults
