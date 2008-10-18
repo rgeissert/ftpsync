@@ -1,10 +1,14 @@
 #! /bin/bash
+# No, we can not deal with sh alone.
 
 set -e
+set -u
 
 # ftpsync script for Debian
 # Based losely on a number of existing scripts, written by an
 # unknown number of different people over the years.
+#
+# Copyright (C) 2008 Joerg Jaspert <joerg@debian.org>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -28,13 +32,115 @@ BASEDIR=${BASEDIR:-"${HOME}"}
 # Source our common functions
 . ${BASEDIR}/etc/common
 
-# Read our config file
-NAME="`basename $0`"
+########################################################################
+########################################################################
+## functions                                                          ##
+########################################################################
+########################################################################
+# We want to be able to get told what kind of sync we should do. This
+# might be anything, from the archive to sync, the stage to do, etc. A
+# list of currently understood and valid options is below. Multiple
+# options are seperated by space. All the words have to have the word
+# sync: in front or nothing will get used!
+#
+# Option        Behaviour
+# stage1		 Only do stage1 sync
+# stage2		 Only do stage2 sync
+# all			 Do a complete sync
+# archive:foo    Sync archive foo (if config for foo is available)
+# callback       Call back when done (needs proper ssh setup for this to
+#                work). It will always use the "command" callback:$HOSTNAME
+#                where $HOSTNAME is the one defined below/in config and
+#                will happen before slave mirrors are triggered.
+#
+# So to get us to sync all of the archive behind bpo and call back when
+# we are done, a trigger command of
+# "ssh $USER@$HOST sync:all sync:archive:bpo sync:callback" will do the
+# trick.
+check_commandline() {
+	while [ $# -gt 0 ]; do
+		case "$1" in
+			sync:stage1)
+				SYNCSTAGE1="true"
+				;;
+			sync:stage2)
+				SYNCSTAGE2="true"
+				;;
+			sync:callback)
+				SYNCCALLBACK="true"
+				;;
+			sync:archive:*)
+				ARCHIVE=${1##sync:archive:}
+				;;
+			sync:all)
+				SYNCALL="true"
+				;;
+			*)
+				echo "Unknown option ${1} ignored"
+				;;
+		esac
+		shift  # Check next set of parameters.
+	done
+}
 
-# In case we are called with an argument we look for a different configuration.
-if [ -n "$1" ]; then
-	NAME="${NAME}-$1"
+# All the stuff we want to do when we exit, no matter where
+cleanup() {
+	trap - ERR TERM HUP INT QUIT EXIT
+	# all done. Mail the log, exit.
+	log "Mirrorsync done";
+	if [ -n "${MAILTO}" ]; then
+        # In case rsync had something on stderr
+		if [ -s "${LOGDIR}/rsync-${NAME}.error" ]; then
+			cat "${LOGDIR}/rsync-${NAME}.error" | mail -e -s "$PROGRAM rsync ERROR ($(hostname -s)) [$$]" ${MAILTO}
+		fi
+		if [ "x${ERRORSONLY}x" = "xfalsex" ]; then
+			# And the normal log
+			mail -e -s "${PROGRAM} ($(hostname)) - archive sync finished on $(date +"%Y.%m.%d-%H:%M:%S")" ${MAILTO} < ${LOG}
+		fi
+	fi
+
+	${SAVELOG} ${LOGDIR}/rsync-${NAME}.log
+	${SAVELOG} ${LOGDIR}/rsync-${NAME}.error
+	${SAVELOG} "$LOG" > /dev/null
+
+	rm -f ${LOCK};
+}
+
+########################################################################
+########################################################################
+
+
+# As what are we called?
+NAME="`basename $0`"
+# The original command line arguments need to be saved!
+ORIGINAL_COMMAND=$*
+
+# Now, check if we got told about stuff via ssh
+if [ -n "${SSH_ORIGINAL_COMMAND}" ]; then
+    # We deliberately add "nothing" and ignore it right again, to avoid
+	# people from outside putting some set options in the first place,
+	# making us parse them...
+	set "nothing" ${SSH_ORIGINAL_COMMAND}
+	shift
+	check_commandline $*
 fi
+
+# Now, we can locally override all the above variables by just putting
+# them into the .ssh/authorized_keys file forced command.
+if [ -n "${ORIGINAL_COMMAND}" ]; then
+	set ${ORIGINAL_COMMAND}
+	check_commandline $*
+fi
+
+# If we have been told to do stuff for a different archive than default,
+# set the name accordingly.
+if [ -n "${ARCHIVE}" ]; then
+	NAME="${NAME}-${ARCHIVE}"
+fi
+
+# Now source the config for the archive we run on.
+# (Yes, people can also overwrite the options above in the config file
+# if they want to)
 . ${BASEDIR}/etc/${NAME}.conf
 
 ########################################################################
@@ -67,7 +173,7 @@ LOG=${LOG:-"${LOGDIR}/${NAME}.log"}
 # Where should we put all the mirrored files?
 TO=${TO:-"/org/ftp.debian.org/ftp/"}
 
-# used by log()
+# used by log() and error()
 PROGRAM=${PROGRAM:-"${NAME}-$(hostname -s)"}
 
 # Where to send mails about mirroring to?
@@ -98,13 +204,25 @@ RSYNC_OPTIONS2=${RSYNC_OPTIONS2:-"--max-delete=40000 --delay-updates --delete --
 # Which rsync share to use on our upstream mirror?
 RSYNC_PATH=${RSYNC_PATH:-"ftp"}
 
+# Do we sync stage1?
+SYNCSTAGE1=${SYNCSTAGE1:-"false"}
+# Do we sync stage2?
+SYNCSTAGE2=${SYNCSTAGE2:-"false"}
+# Do we sync all?
+SYNCALL=${SYNCALL:-"true"}
+# Do we callback?
+SYNCCALLBACK=${SYNCCALLBACK:-"false"}
+# If we call back we need some more options defined in the config file.
+CALLBACKUSER=${CALLBACKUSER:-"archvsync"}
+CALLBACKHOST=${CALLBACKHOST:-"none"}
+CALLBACKKEY=${CALLBACKKEY:-"none"}
+
 # General excludes. Dont list architecture specific stuff here, use ARCH_EXCLUDE for that!
 EXCLUDE=${EXCLUDE:-""}
 
 # The temp directory used by rsync --delay-updates is not
 # world-readable remotely. Always exclude it to avoid errors. 
 EXCLUDE="${EXCLUDE} --exclude .~tmp~/"
-
 
 SOURCE_EXCLUDE=${SOURCE_EXCLUDE:-""}
 # Exclude architectures defined in $ARCH_EXCLUDE
@@ -130,6 +248,7 @@ for ARCH in ${ARCH_EXCLUDE}; do
 	fi
 done
 
+
 # Some sane defaults
 cd ${BASEDIR}
 umask 002
@@ -147,29 +266,6 @@ mkdir -p ${TO}/project/trace
 # - done. Archive not correctly synced, we don't have all the changes from the second push.
 touch "${UPDATEREQUIRED}"
 
-# All the stuff we want to do when we exit, no matter where
-cleanup() {
-	trap - ERR TERM HUP INT QUIT EXIT
-	# all done. Mail the log, exit.
-	log "Mirrorsync done";
-	if [ -n "${MAILTO}" ]; then
-        # In case rsync had something on stderr
-		if [ -s "${LOGDIR}/rsync-${NAME}.error" ]; then
-			cat "${LOGDIR}/rsync-${NAME}.error" | mail -e -s "$PROGRAM rsync ERROR ($(hostname -s)) [$$]" ${MAILTO}
-		fi
-		if [ "x${ERRORSONLY}x" = "xfalsex" ]; then
-			# And the normal log
-			mail -e -s "${PROGRAM} ($(hostname)) - archive sync finished on $(date +"%Y.%m.%d-%H:%M:%S")" ${MAILTO} < ${LOG}
-		fi
-	fi
-
-	${SAVELOG} ${LOGDIR}/rsync-${NAME}.log
-	${SAVELOG} ${LOGDIR}/rsync-${NAME}.error
-	${SAVELOG} "$LOG" > /dev/null
-
-	rm -f ${LOCK};
-}
-
 # Check to see if another sync is in progress
 if ${LOCKFILE} -! -l 43200 -r 0 "${LOCK}"; then
         error "Unable to start rsync, lock file still exists"
@@ -182,7 +278,10 @@ exec >"$LOG" 2>&1
 log "Mirrorsync start"
 log "Acquired main lock"
 
-export RSYNC_PASSWORD
+if [ "xtruex" = "x${SYNCCALLBACK}x" ] || [ "xnonex" = "x${CALLBACKHOST}x" ] || [ "xnonex" = "x${CALLBACKKEY}x"]; then
+	SYNCCALLBACK="false"
+	error "We are asked to call back, but we do not know where to and do not have a key, ignoring callback"
+fi
 
 if [ -n "${HOOK1}" ]; then
 	log "Running hook1: ${HOOK1}"
@@ -200,18 +299,26 @@ else
 fi
 
 # Now do the actual mirroring, and run as long as we have an updaterequired file.
+export RSYNC_PASSWORD
+
 while [ -e "${UPDATEREQUIRED}" ]; do
 	log "Running mirrorsync, update is required, ${UPDATEREQUIRED} exists"
 	rm -f "${UPDATEREQUIRED}"
 
-	log "Running stage1: ${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS1} ${EXCLUDE} ${SOURCE_EXCLUDE}  ${RSYNCPTH}::${RSYNC_PATH} ${TO}"
+	# if we want stage1 *or* all
+	if [ "xtruex" = "x${SYNCSTAGE1}x"] || [ "xtruex" = "x${SYNCALL}x"]; then
+		log "Running stage1: ${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS1} ${EXCLUDE} ${SOURCE_EXCLUDE}  ${RSYNCPTH}::${RSYNC_PATH} ${TO}"
 
-	# Step one, sync everything except Packages/Releases
-	${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS1} ${EXCLUDE} ${SOURCE_EXCLUDE} \
-		${RSYNCPTH}::${RSYNC_PATH} ${TO} >${LOGDIR}/rsync-${NAME}.log 2>${LOGDIR}/rsync-${NAME}.error
-	result=$?
+		# Step one, sync everything except Packages/Releases
+		${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS1} ${EXCLUDE} ${SOURCE_EXCLUDE} \
+			${RSYNCPTH}::${RSYNC_PATH} ${TO} >${LOGDIR}/rsync-${NAME}.log 2>${LOGDIR}/rsync-${NAME}.error
+		result=$?
 
-	log "Back from rsync with returncode ${result}"
+		log "Back from rsync with returncode ${result}"
+	else
+		# Fake a good resultcode
+		result=0
+	fi # Sync stage 1?
 
 	# 24 - vanished source files. Ignored, that should be the target of $UPDATEREQUIRED
 	# and us re-running. If it's not, uplink is broken anyways.
@@ -224,15 +331,21 @@ while [ -e "${UPDATEREQUIRED}" ]; do
 			log "Back from hook1, got returncode ${result}"
 		fi
 
-		log "Running stage2: ${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS2} ${EXCLUDE} ${SOURCE_EXCLUDE} ${RSYNCPTH}::${RSYNC_PATH} ${TO}"
+		# if we want stage2 *or* all
+		if [ "xtruex" = "x${SYNCSTAGE2}x"] || [ "xtruex" = "x${SYNCALL}x"]; then
+			log "Running stage2: ${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS2} ${EXCLUDE} ${SOURCE_EXCLUDE} ${RSYNCPTH}::${RSYNC_PATH} ${TO}"
 
-		# We are lucky, it worked. Now do step 2 and sync again, this time including
-		# the packages/releases files
-		${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS2} ${EXCLUDE} ${SOURCE_EXCLUDE} \
-			${RSYNCPTH}::${RSYNC_PATH} ${TO} >>${LOGDIR}/rsync-${NAME}.log 2>>${LOGDIR}/rsync-${NAME}.error
-		result=$?
+			# We are lucky, it worked. Now do step 2 and sync again, this time including
+			# the packages/releases files
+			${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS2} ${EXCLUDE} ${SOURCE_EXCLUDE} \
+				${RSYNCPTH}::${RSYNC_PATH} ${TO} >>${LOGDIR}/rsync-${NAME}.log 2>>${LOGDIR}/rsync-${NAME}.error
+			result=$?
 
-		log "Back from rsync with returncode ${result}"
+			log "Back from rsync with returncode ${result}"
+		else
+			# Fake a good resultcode
+			result=0
+		fi # Sync stage 2?
 
 		if [ $result -eq 0 ] || [ $result -eq 24 ]; then
 			if [ -n "${HOOK3}" ]; then
@@ -260,6 +373,10 @@ if [ -n "${HOOK4}" ]; then
 	${HOOK4}
 	result=$?
 	log "Back from hook4, got returncode ${result}"
+fi
+
+if [ "xtruex" = "x${SYNCCALLBACK}x" ]; then
+	callback ${CALLBACKUSER} ${CALLBACKHOST} ${CALLBACKKEY}
 fi
 
 if [ x${HUB} = "xtrue" ]; then

@@ -31,6 +31,12 @@ signal () {
 	ssh $SSH_OPTIONS -i "$5" -o"user $3" -$4 "$2" sleep 1 >>${LOGDIR}/$1.log 2>&1 &
 }
 
+# callback, used by ftpsync
+callback () {
+	# Defaults we always want, no matter what
+	SSH_OPTIONS="-o BatchMode=yes -o SetupTimeOut=45 -o ConnectTimeout=45 -o PasswordAuthentication=no"
+	ssh $SSH_OPTIONS -i "$3" -o"user $1" "$2" callback:${HOSTNAME}
+}
 
 # log something (basically echo it together with a timestamp)
 #
