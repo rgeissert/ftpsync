@@ -1,34 +1,92 @@
+# -*- mode:sh -*-
 # Little common functions
 
 # push a mirror attached to us.
-# Arguments:
-# $1 - Name for the mirror, also basename for the logfile
-# $2 - Hostname to push to
-# $3 - Username there
-# $4 - Protocol version, either 1 or 2.
-# $5 - the ssh private key file to use for this push
-# $6 - any other option ssh accepts, passed blindly, be careful
+# Arguments (using an array named SIGNAL_OPTS):
+#
+# $MIRROR      - Name for the mirror, also basename for the logfile
+# $HOSTNAME    - Hostname to push to
+# $USERNAME    - Username there
+# $SSHPROTO    - Protocol version, either 1 or 2.
+# $SSHKEY      - the ssh private key file to use for this push
+# $SSHOPTS     - any other option ssh accepts, passed blindly, be careful
+# $PUSHLOCKOWN - own lockfile name to touch after stage1 in pushtype=staged
+# $PUSHTYPE    - what kind of push should be done?
+#                all    - normal, just push once with ssh backgrounded and finish
+#                staged - staged. first push stage1, then wait for $PUSHLOCKs to appear,
+#                         then push stage2
+# $PUSHARCHIVE - what archive to sync? (Multiple mirrors behind one ssh key!)
+# $PUSHCB      - do we want a callback?
 #
 # This function assumes that the variable LOG is set to a directory where
 # logfiles can be written to.
-# Pushes will be done in background.
+# Additionally $PUSHLOCKS has to be defined as a set of space delimited strings
+# (list of "lock"files) to wait for if you want pushtype=staged
+#
+# Pushes might be done in background (for type all).
 signal () {
-	if [ $# -lt 5 ]; then
-		echo "Called with only $# parameters, expect at least 5"
-		return 2
-	fi
+	ARGS="SIGNAL_OPTS[*]"
+	local ${!SIGNAL_OPTS}
 
 	# Defaults we always want, no matter what
 	SSH_OPTIONS="-o BatchMode=yes -o SetupTimeOut=45 -o ConnectTimeout=45 -o PasswordAuthentication=no"
 
-	if [ $# -eq 6 ]; then
-		# The sixth sense^Wparameter, add it
-		SSH_OPTIONS="$SSH_OPTIONS $6"
+	if [ $SSHOPTS -n ]; then
+		SSH_OPTIONS="$SSH_OPTIONS $SSHOPTS"
 	fi
 
-	# Finally call ssh
-	date -u >> ${LOGDIR}/$1.log
-	ssh $SSH_OPTIONS -i "$5" -o"user $3" -$4 "$2" sleep 1 >>${LOGDIR}/$1.log 2>&1 &
+	if [ ${SSHPROTO} -ne 1 ] && [ ${SSHPROTO} -ne 2 ]; then
+		# Idiots, we only want 1 or 2. Cant decide? Lets force 2
+		${SSHPROTO}=2
+	fi
+
+	date -u >> ${LOGDIR}/${MIRROR}.log
+
+	if [ "xallx" = "x${PUSHTYPE}x" ]; then
+		# Default normal "fire and forget" push
+		ssh $SSH_OPTIONS -i "${SSHKEY}" -o"user ${USERNAME}" -${SSHPROTO} "${HOSTNAME}" "sync:all" >>${LOGDIR}/${MIRROR}.log 2>&1 &
+	elif [ "xstagedx" = "x{$PUSHTYPE}x"]; then
+		# Want a staged push. Fine, lets do that
+
+		PUSHARGS=""
+		if [ -n ${PUSHARCHIVE} ]; then
+			PUSHARGS="${PUSHARGS sync:archive:${PUSHARCHIVE}"
+		fi
+		if [ -n ${PUSHCB} ]; then
+			PUSHARGS="${PUSHARGS sync:callback"
+		fi
+
+		# Step1: Do a push to only sync stage1, do not background
+		PUSHARGS1="sync:stage1"
+		ssh $SSH_OPTIONS -i "${SSHKEY}" -o"user ${USERNAME}" -${SSHPROTO} "${HOSTNAME}" "${PUSHARGS} ${PUSHARGS1}" >>${LOGDIR}/${MIRROR}.log 2>&1
+		touch ${PUSHLOCKOWN}
+
+		# Step2: Wait for all the other "lock"files to appear.
+		tries=0
+		# We do not wait forever
+		while [ $tries -lt 30 ]; do
+			total=0
+			found=0
+			for file in ${PUSHLOCKS}; do
+				total=$((total + 1))
+				if [ -f ${file} ]; then
+					found=$(($found + 1))
+				fi
+			done
+			if [ $total -eq $found ];
+				break;
+			fi
+			sleep 20
+		done
+		rm -f ${PUSHLOCKOWN}
+
+		# Steo3: It either timed out or we have all the "lock"files, sync stage2
+		PUSHARGS1="sync:stage2"
+		ssh $SSH_OPTIONS -i "${SSHKEY}" -o"user ${USERNAME}" -${SSHPROTO} "${HOSTNAME}" "${PUSHARGS} ${PUSHARGS2}" >>${LOGDIR}/${MIRROR}.log 2>&1
+	else
+		# Can't decide? Then you get nothing.
+	fi
+
 }
 
 # callback, used by ftpsync

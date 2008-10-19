@@ -1,7 +1,12 @@
 # Definition of mirror hosts we push.
 # One mirror per line, with the following fields defined.
 #
-# ShortName HostName User SSHProtocol SSHKeyFile
+# Type ShortName HostName User SSHProtocol SSHKeyFile
+#
+# Type is either all or staged, meaning:
+# all    - do a "normal" push. Trigger them, go on.
+# staged - do a two-stage push, waiting for them after stage 2(and all others that
+#          are staged) before doing stage2
 #
 # ShortName will be used as a shorthand in logfile outputs and for the logfile
 # where every ssh output gets redirected to.
@@ -10,10 +15,16 @@
 # If SSHProtocol is empty, it will default to 2, but if you want to
 #                define a keyfile you HAVE TO set protocol too!
 #
-# Example:
-# eu.puccini puccini.debian.org archvsync 2 ~/.ssh/push_puccini
+# Examples:
+# all eu.puccini puccini.debian.org archvsync 2 ~/.ssh/push_puccini
 #
 # will push puccini.debian.org, user archvsync, using ssh protocol 2 and the specified ssh key.
+#
+# staged eu.puccini puccini.debian.org
+# staged eu.powell powell.debian.org
+#
+# will push both puccini and powell in stage1, waiting for both to
+# finish stage1 before stage2 gets pushed.
 #
 # One special value is allowed: DELAY
 # This word has to be on a line itself, nothing else, not even
