@@ -234,6 +234,7 @@ for ARCH in ${ARCH_EXCLUDE}; do
                 --exclude disks-${ARCH}/ \
                 --exclude installer-${ARCH}/ \
                 --exclude Contents-${ARCH}.gz \
+                --exclude Contents-${ARCH}.bz2 \
                 --exclude Contents-${ARCH}.diff/ \
                 --exclude arch-${ARCH}.files \
                 --exclude arch-${ARCH}.list.gz \
@@ -245,6 +246,8 @@ for ARCH in ${ARCH_EXCLUDE}; do
                 --exclude source/ \
                 --exclude *.tar.gz \
                 --exclude *.diff.gz \
+                --exclude *.tar.bz2 \
+                --exclude *.diff.bz2 \
                 --exclude *.dsc "
 		fi
 	fi
