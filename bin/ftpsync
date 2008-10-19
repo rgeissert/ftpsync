@@ -62,9 +62,11 @@ check_commandline() {
 		case "$1" in
 			sync:stage1)
 				SYNCSTAGE1="true"
+				SYNCALL="false"
 				;;
 			sync:stage2)
 				SYNCSTAGE2="true"
+				SYNCALL="false"
 				;;
 			sync:callback)
 				SYNCCALLBACK="true"
