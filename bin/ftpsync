@@ -111,6 +111,24 @@ cleanup() {
 	rm -f "${LOCK}";
 }
 
+check_rsync() {
+
+	ret=$1
+	msg=$2
+
+	# 24 - vanished source files. Ignored, that should be the target of $UPDATEREQUIRED
+	# and us re-running. If it's not, uplink is broken anyways.
+
+	case "$1" in
+		0) return 0;;
+		24) return 0;;
+		*)
+		error "ERROR: $msg"
+		return 1
+		;;
+	esac
+}
+
 ########################################################################
 ########################################################################
 
@@ -335,12 +353,7 @@ while [ -e "${UPDATEREQUIRED}" ]; do
 		result=0
 	fi # Sync stage 1?
 
-	# 24 - vanished source files. Ignored, that should be the target of $UPDATEREQUIRED
-	# and us re-running. If it's not, uplink is broken anyways.
-	if [ $result -ne 0 ] && [ $result -ne 24 ]; then
-		error "ERROR: Sync step 1 went wrong, got errorcode ${result}. Logfile: ${LOG}. Aborting"
-		exit 3
-	fi
+	check_rsync $result "Sync step 1 went wrong, got errorcode ${result}. Logfile: ${LOG}" || exit 3
 
 	HOOK=(
 		HOOKNR=2
@@ -364,10 +377,7 @@ while [ -e "${UPDATEREQUIRED}" ]; do
 		result=0
 	fi # Sync stage 2?
 
-	if [ $result -ne 0 ] && [ $result -ne 24 ]; then
-		error "ERROR: Sync step 2 went wrong, got errorcode ${result}. Logfile: ${LOG}"
-		exit 4
-	fi
+	check_rsync $result "Sync step 2 went wrong, got errorcode ${result}. Logfile: ${LOG}" || exit 4
 
 	HOOK=(
 		HOOKNR=3
