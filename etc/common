@@ -26,7 +26,7 @@
 # Pushes might be done in background (for type all).
 signal () {
 	ARGS="SIGNAL_OPTS[*]"
-	local ${!SIGNAL_OPTS}
+	local ${!ARGS}
 
 	# Defaults we always want, no matter what
 	SSH_OPTIONS="-o BatchMode=yes -o SetupTimeOut=45 -o ConnectTimeout=45 -o PasswordAuthentication=no"
@@ -40,11 +40,11 @@ signal () {
 		${SSHPROTO}=2
 	fi
 
-	date -u >> ${LOGDIR}/${MIRROR}.log
+	date -u >> "${LOGDIR}/${MIRROR}.log"
 
 	if [ "xallx" = "x${PUSHTYPE}x" ]; then
 		# Default normal "fire and forget" push
-		ssh $SSH_OPTIONS -i "${SSHKEY}" -o"user ${USERNAME}" -${SSHPROTO} "${HOSTNAME}" "sync:all" >>${LOGDIR}/${MIRROR}.log 2>&1 &
+		ssh $SSH_OPTIONS -i "${SSHKEY}" -o"user ${USERNAME}" -${SSHPROTO} "${HOSTNAME}" "sync:all" >>"${LOGDIR}/${MIRROR}.log" 2>&1 &
 	elif [ "xstagedx" = "x{$PUSHTYPE}x"]; then
 		# Want a staged push. Fine, lets do that
 
@@ -58,31 +58,31 @@ signal () {
 
 		# Step1: Do a push to only sync stage1, do not background
 		PUSHARGS1="sync:stage1"
-		ssh $SSH_OPTIONS -i "${SSHKEY}" -o"user ${USERNAME}" -${SSHPROTO} "${HOSTNAME}" "${PUSHARGS} ${PUSHARGS1}" >>${LOGDIR}/${MIRROR}.log 2>&1
-		touch ${PUSHLOCKOWN}
+		ssh $SSH_OPTIONS -i "${SSHKEY}" -o"user ${USERNAME}" -${SSHPROTO} "${HOSTNAME}" "${PUSHARGS} ${PUSHARGS1}" >>"${LOGDIR}/${MIRROR}.log" 2>&1
+		touch "${PUSHLOCKOWN}"
 
 		# Step2: Wait for all the other "lock"files to appear.
 		tries=0
 		# We do not wait forever
-		while [ $tries -lt 30 ]; do
+		while [ ${tries} -lt 30 ]; do
 			total=0
 			found=0
 			for file in ${PUSHLOCKS}; do
 				total=$((total + 1))
 				if [ -f ${file} ]; then
-					found=$(($found + 1))
+					found=$((found + 1))
 				fi
 			done
-			if [ $total -eq $found ];
+			if [ ${total} -eq ${found} ];
 				break;
 			fi
 			sleep 20
 		done
-		rm -f ${PUSHLOCKOWN}
+		rm -f "${PUSHLOCKOWN}"
 
-		# Steo3: It either timed out or we have all the "lock"files, sync stage2
+		# Step3: It either timed out or we have all the "lock"files, sync stage2
 		PUSHARGS1="sync:stage2"
-		ssh $SSH_OPTIONS -i "${SSHKEY}" -o"user ${USERNAME}" -${SSHPROTO} "${HOSTNAME}" "${PUSHARGS} ${PUSHARGS2}" >>${LOGDIR}/${MIRROR}.log 2>&1
+		ssh $SSH_OPTIONS -i "${SSHKEY}" -o"user ${USERNAME}" -${SSHPROTO} "${HOSTNAME}" "${PUSHARGS} ${PUSHARGS2}" >>"${LOGDIR}/${MIRROR}.log" 2>&1
 	else
 		# Can't decide? Then you get nothing.
 	fi
@@ -112,6 +112,25 @@ log () {
 error () {
 	log "$@"
 	if [ -z ${MAILTO} ]; then
-		echo "$@" | mail -e -s "$PROGRAM ERROR ($(hostname -s)) [$$]" ${MAILTO}
+		echo "$@" | mail -e -s "[$PROGRAM@$(hostname -s)] ERROR [$$]" ${MAILTO}
+	fi
+}
+
+# run a hook
+# needs array variable HOOK setup with HOOKNR being a number an HOOKSCR
+# the script to run.
+hook () {
+	ARGS="HOOK[*]"
+	local ${!ARGS}
+	if [ -n "${HOOKSCR}" ]; then
+		log "Running hook $HOOKNR: ${HOOKSCR}"
+		set +e
+		${HOOKSCR}
+		result=$?
+		set -e
+		log "Back from hook $HOOKNR, got returncode ${result}"
+		return $result
+	else
+		return 0
 	fi
 }

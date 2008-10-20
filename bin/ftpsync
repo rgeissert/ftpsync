@@ -30,7 +30,7 @@ set -u
 BASEDIR=${BASEDIR:-"${HOME}"}
 
 # Source our common functions
-. ${BASEDIR}/etc/common
+. "${BASEDIR}/etc/common"
 
 ########################################################################
 ########################################################################
@@ -73,6 +73,9 @@ check_commandline() {
 				;;
 			sync:archive:*)
 				ARCHIVE=${1##sync:archive:}
+				# We do not like / or . in the remotely supplied archive name.
+				ARCHIVE=${ARCHIVE//\/}
+				ARCHIVE=${ARCHIVE//.}
 				;;
 			sync:all)
 				SYNCALL="true"
@@ -93,19 +96,19 @@ cleanup() {
 	if [ -n "${MAILTO}" ]; then
         # In case rsync had something on stderr
 		if [ -s "${LOGDIR}/rsync-${NAME}.error" ]; then
-			cat "${LOGDIR}/rsync-${NAME}.error" | mail -e -s "$PROGRAM rsync ERROR ($(hostname -s)) [$$]" ${MAILTO}
+			mail -e -s "[${PROGRAM}@$(hostname -s)] ($$) rsync ERROR on $(date +"%Y.%m.%d-%H:%M:%S")" ${MAILTO} < "${LOGDIR}/rsync-${NAME}.error"
 		fi
 		if [ "x${ERRORSONLY}x" = "xfalsex" ]; then
 			# And the normal log
-			mail -e -s "${PROGRAM} ($(hostname)) - archive sync finished on $(date +"%Y.%m.%d-%H:%M:%S")" ${MAILTO} < ${LOG}
+			mail -e -s "[${PROGRAM}@$(hostname -s)] archive sync finished on $(date +"%Y.%m.%d-%H:%M:%S")" ${MAILTO} < ${LOG}
 		fi
 	fi
 
-	${SAVELOG} ${LOGDIR}/rsync-${NAME}.log
-	${SAVELOG} ${LOGDIR}/rsync-${NAME}.error
+	${SAVELOG} "${LOGDIR}/rsync-${NAME}.log"
+	${SAVELOG} "${LOGDIR}/rsync-${NAME}.error"
 	${SAVELOG} "$LOG" > /dev/null
 
-	rm -f ${LOCK};
+	rm -f "${LOCK}";
 }
 
 ########################################################################
@@ -122,16 +125,18 @@ if [ -n "${SSH_ORIGINAL_COMMAND}" ]; then
     # We deliberately add "nothing" and ignore it right again, to avoid
 	# people from outside putting some set options in the first place,
 	# making us parse them...
-	set "nothing" ${SSH_ORIGINAL_COMMAND}
+	set "nothing" "${SSH_ORIGINAL_COMMAND}"
 	shift
-	check_commandline "$*"
+	# Yes, unqouted $* here. Or the function will only see it as one
+	# parameter, which doesnt help the case in it.
+	check_commandline $*
 fi
 
 # Now, we can locally override all the above variables by just putting
 # them into the .ssh/authorized_keys file forced command.
 if [ -n "${ORIGINAL_COMMAND}" ]; then
 	set ${ORIGINAL_COMMAND}
-	check_commandline "$*"
+	check_commandline $*
 fi
 
 # If we have been told to do stuff for a different archive than default,
@@ -143,7 +148,7 @@ fi
 # Now source the config for the archive we run on.
 # (Yes, people can also overwrite the options above in the config file
 # if they want to)
-. ${BASEDIR}/etc/${NAME}.conf
+. "${BASEDIR}/etc/${NAME}.conf"
 
 ########################################################################
 # Config options go here. Feel free to overwrite them in the config    #
@@ -179,7 +184,13 @@ TO=${TO:-"/org/ftp.debian.org/ftp/"}
 PROGRAM=${PROGRAM:-"${NAME}-$(hostname -s)"}
 
 # Where to send mails about mirroring to?
-MAILTO=${MAILTO:-"mirrorlogs@debian.org"}
+if [ "x${HOSTNAME}x" = "x${HOSTNAME%%.debian.org}x" ]; then
+	# We are not on a debian.org host
+	MAILTO=${MAILTO:-"root"}
+else
+	# Yay, on a .debian.org host
+	MAILTO=${MAILTO:-"mirrorlogs@debian.org"}
+fi
 # Want errors only or every log?
 ERRORSONLY=${ERRORSONLY:-"false"}
 
@@ -192,7 +203,7 @@ LOCKFILE=${LOCKFILE:-"lockfile"}
 LOCK=${LOCK:-"${TO}/Archive-Update-in-Progress-${HOSTNAME}"}
 # Do we need another rsync run?
 UPDATEREQUIRED="${TO}/Archive-Update-Required-${HOSTNAME}"
-# Trace file for mirror stats and checks
+# Trace file for mirror stats and checks (make sure we get full hostname)
 TRACE=${TRACE:-"project/trace/$(hostname -f)"}
 
 # rsync program
@@ -255,12 +266,12 @@ done
 
 
 # Some sane defaults
-cd ${BASEDIR}
-umask 002
+cd "${BASEDIR}"
+umask 022
 
 # If we are here for the first time, create the
 # destination and the trace directory
-mkdir -p ${TO}/project/trace
+mkdir -p "${TO}/project/trace"
 
 # Used to make sure we will have the archive fully and completly synced before
 # we stop, even if we get multiple pushes while this script is running.
@@ -288,12 +299,11 @@ if [ "xtruex" = "x${SYNCCALLBACK}x" ] || [ "xnonex" = "x${CALLBACKHOST}x" ] || [
 	error "We are asked to call back, but we do not know where to and do not have a key, ignoring callback"
 fi
 
-if [ -n "${HOOK1}" ]; then
-	log "Running hook1: ${HOOK1}"
-	${HOOK1}
-	result=$?
-	log "Back from hook1, got returncode ${result}"
-fi
+HOOK=(
+	HOOKNR=1
+	HOOKSCR=${HOOK1}
+)
+hook $HOOK
 
 # Now, we might want to sync from anonymous too.
 # This is that deep in this script so hook1 could, if wanted, change things!
@@ -316,7 +326,7 @@ while [ -e "${UPDATEREQUIRED}" ]; do
 
 		# Step one, sync everything except Packages/Releases
 		${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS1} ${EXCLUDE} ${SOURCE_EXCLUDE} \
-			${RSYNCPTH}::${RSYNC_PATH} ${TO} >${LOGDIR}/rsync-${NAME}.log 2>${LOGDIR}/rsync-${NAME}.error
+			${RSYNCPTH}::${RSYNC_PATH} "${TO}" >"${LOGDIR}/rsync-${NAME}.log" 2>"${LOGDIR}/rsync-${NAME}.error"
 		result=$?
 
 		log "Back from rsync with returncode ${result}"
@@ -327,61 +337,59 @@ while [ -e "${UPDATEREQUIRED}" ]; do
 
 	# 24 - vanished source files. Ignored, that should be the target of $UPDATEREQUIRED
 	# and us re-running. If it's not, uplink is broken anyways.
-	if [ $result -eq 0 ] || [ $result -eq 24 ]; then
-
-		if [ -n "${HOOK2}" ]; then
-			log "Running hook2: ${HOOK1}"
-			${HOOK2}
-			result=$?
-			log "Back from hook1, got returncode ${result}"
-		fi
-
-		# if we want stage2 *or* all
-		if [ "xtruex" = "x${SYNCSTAGE2}x"] || [ "xtruex" = "x${SYNCALL}x"]; then
-			log "Running stage2: ${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS2} ${EXCLUDE} ${SOURCE_EXCLUDE} ${RSYNCPTH}::${RSYNC_PATH} ${TO}"
-
-			# We are lucky, it worked. Now do step 2 and sync again, this time including
-			# the packages/releases files
-			${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS2} ${EXCLUDE} ${SOURCE_EXCLUDE} \
-				${RSYNCPTH}::${RSYNC_PATH} ${TO} >>${LOGDIR}/rsync-${NAME}.log 2>>${LOGDIR}/rsync-${NAME}.error
-			result=$?
-
-			log "Back from rsync with returncode ${result}"
-		else
-			# Fake a good resultcode
-			result=0
-		fi # Sync stage 2?
-
-		if [ $result -eq 0 ] || [ $result -eq 24 ]; then
-			if [ -n "${HOOK3}" ]; then
-				log "Running hook3: ${HOOK1}"
-				${HOOK3}
-				result=$?
-				log "Back from hook3, got returncode ${result}"
-			fi
-		else
-			error "ERROR: Sync step 2 went wrong, got errorcode ${result}. Logfile: ${LOG}"
-			exit 4
-		fi
-	else
-		error "ERROR: Sync step 1 went wrong, got errorcode ${result}. Logfile: ${LOG}"
+	if [ $result -ne 0 ] && [ $result -ne 24 ]; then
+		error "ERROR: Sync step 1 went wrong, got errorcode ${result}. Logfile: ${LOG}. Aborting"
 		exit 3
 	fi
+
+	HOOK=(
+		HOOKNR=2
+		HOOKSCR=${HOOK2}
+	)
+	hook $HOOK
+
+	# if we want stage2 *or* all
+	if [ "xtruex" = "x${SYNCSTAGE2}x"] || [ "xtruex" = "x${SYNCALL}x"]; then
+		log "Running stage2: ${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS2} ${EXCLUDE} ${SOURCE_EXCLUDE} ${RSYNCPTH}::${RSYNC_PATH} ${TO}"
+
+		# We are lucky, it worked. Now do step 2 and sync again, this time including
+		# the packages/releases files
+		${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS2} ${EXCLUDE} ${SOURCE_EXCLUDE} \
+			${RSYNCPTH}::${RSYNC_PATH} "${TO}" >>${LOGDIR}/rsync-${NAME}.log 2>>${LOGDIR}/rsync-${NAME}.error
+		result=$?
+
+		log "Back from rsync with returncode ${result}"
+	else
+		# Fake a good resultcode
+		result=0
+	fi # Sync stage 2?
+
+	if [ $result -ne 0 ] && [ $result -ne 24 ]; then
+		error "ERROR: Sync step 2 went wrong, got errorcode ${result}. Logfile: ${LOG}"
+		exit 4
+	fi
+
+	HOOK=(
+		HOOKNR=3
+		HOOKSCR=${HOOK3}
+	)
+	hook $HOOK
 done
 
 if [ -d "${TO}/project/trace" ]; then
       date -u > "${TO}/${TRACE}"
 fi
 
-if [ -n "${HOOK4}" ]; then
-	log "Running hook4: ${HOOK1}"
-	${HOOK4}
-	result=$?
-	log "Back from hook4, got returncode ${result}"
-fi
+HOOK=(
+	HOOKNR=4
+	HOOKSCR=${HOOK4}
+)
+hook $HOOK
 
 if [ "xtruex" = "x${SYNCCALLBACK}x" ]; then
-	callback ${CALLBACKUSER} ${CALLBACKHOST} ${CALLBACKKEY}
+	set +e
+	callback ${CALLBACKUSER} ${CALLBACKHOST} "${CALLBACKKEY}"
+	set -e
 fi
 
 if [ x${HUB} = "xtrue" ]; then
@@ -389,13 +397,11 @@ if [ x${HUB} = "xtrue" ]; then
 	${BASEDIR}/bin/runmirrors
 	log "Trigger slave done"
 
-	if [ -n "${HOOK5}" ]; then
-		log "Running hook5: ${HOOK1}"
-		${HOOK5}
-		result=$?
-		log "Back from hook5, got returncode ${result}"
-	fi
+	HOOK=(
+		HOOKNR=5
+		HOOKSCR=${HOOK5}
+	)
+	hook $HOOK
 fi
 
-# All done, remove our LOCK, rest is done by cleanup hook.
-rm -f $LOCK
+# All done, rest is done by cleanup hook.

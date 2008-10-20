@@ -62,7 +62,7 @@ SSH_OPTS=${SSH_OPTS:-""}
 
 # Some sane defaults
 cd ${BASEDIR}
-umask 002
+umask 022
 
 # Make sure we have our log and lock directories
 mkdir -p ${LOGDIR}
