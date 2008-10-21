@@ -168,7 +168,12 @@ fi
 # Now source the config for the archive we run on.
 # (Yes, people can also overwrite the options above in the config file
 # if they want to)
-. "${BASEDIR}/etc/${NAME}.conf"
+if [-f "${BASEDIR}/etc/${NAME}.conf" ]; then
+	. "${BASEDIR}/etc/${NAME}.conf"
+else
+	echo "Nono, you can't tell us about random archives. Bad boy!"
+	exit 1
+fi
 
 ########################################################################
 # Config options go here. Feel free to overwrite them in the config    #
