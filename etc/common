@@ -33,6 +33,7 @@ signal () {
 	USERNAME=${USERNAME:-""}
 	SSHPROTO=${SSHPROTO:-""}
 	SSHKEY=${SSHKEY:-""}
+	SSHOPTS=${SSHOPTS:-""}
 	PUSHLOCKOWN=${PUSHLOCKOWN:-""}
 	PUSHTYPE=${PUSHTYPE:-"all"}
 	PUSHARCHIVE=${PUSHARCHIVE:-""}
@@ -43,7 +44,7 @@ signal () {
 	SSH_OPTIONS="-o BatchMode=yes -o SetupTimeOut=45 -o ConnectTimeout=45 -o PasswordAuthentication=no"
 
 	if [ ${SSHOPTS} -n ]; then
-		SSH_OPTIONS="${SSH_OPTIONS} $[SSHOPTS}"
+		SSH_OPTIONS="${SSH_OPTIONS} ${SSHOPTS}"
 	fi
 
 	if [ ${SSHPROTO} -ne 1 ] && [ ${SSHPROTO} -ne 2 ]; then
