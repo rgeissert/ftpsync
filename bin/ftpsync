@@ -315,7 +315,7 @@ exec >"$LOG" 2>&1
 log "Mirrorsync start"
 log "Acquired main lock"
 
-if [ "xtruex" = "x${SYNCCALLBACK}x" ] && [ "xnonex" = "x${CALLBACKHOST}x" ] || [ "xnonex" = "x${CALLBACKKEY}x"]; then
+if [ "xtruex" = "x${SYNCCALLBACK}x" ] && [ "xnonex" = "x${CALLBACKHOST}x" ] || [ "xnonex" = "x${CALLBACKKEY}x" ]; then
 	SYNCCALLBACK="false"
 	error "We are asked to call back, but we do not know where to and do not have a key, ignoring callback"
 fi
