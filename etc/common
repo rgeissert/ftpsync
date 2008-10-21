@@ -85,6 +85,7 @@ signal () {
 		ssh $SSH_OPTIONS -i "${SSHKEY}" -o"user ${USERNAME}" -${SSHPROTO} "${HOSTNAME}" "${PUSHARGS} ${PUSHARGS2}" >>"${LOGDIR}/${MIRROR}.log" 2>&1
 	else
 		# Can't decide? Then you get nothing.
+		return
 	fi
 
 }
