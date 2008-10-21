@@ -410,15 +410,18 @@ if [ "xtruex" = "x${SYNCCALLBACK}x" ]; then
 fi
 
 if [ x${HUB} = "xtrue" ]; then
-	log "Trigger slave mirrors"
-	${BASEDIR}/bin/runmirrors
-	log "Trigger slave done"
+	# Only trigger slave mirrors if we had a push for stage2 or all
+	if [ "xtruex" = "x${SYNCSTAGE2}x" ] || [ "xtruex" = "x${SYNCALL}x" ]; then
+		log "Trigger slave mirrors"
+		${BASEDIR}/bin/runmirrors
+		log "Trigger slave done"
 
-	HOOK=(
-		HOOKNR=5
-		HOOKSCR=${HOOK5}
-	)
-	hook $HOOK
+		HOOK=(
+			HOOKNR=5
+			HOOKSCR=${HOOK5}
+		)
+		hook $HOOK
+	fi
 fi
 
 # All done, rest is done by cleanup hook.
