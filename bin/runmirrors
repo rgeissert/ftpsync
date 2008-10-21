@@ -29,8 +29,9 @@ BASEDIR=${BASEDIR:-"${HOME}"}
 NAME="`basename $0`"
 
 # In case we are called with an argument we look for a different configuration.
-if [ -n "$1" ]; then
-	NAME="${NAME}-$1"
+CONF=${1:-""}
+if [ -n "${CONF}" ]; then
+	NAME="${NAME}-${CONF}"
 fi
 
 # Read our config file

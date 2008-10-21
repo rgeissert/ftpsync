@@ -258,6 +258,7 @@ EXCLUDE=${EXCLUDE:-""}
 EXCLUDE="${EXCLUDE} --exclude .~tmp~/"
 
 SOURCE_EXCLUDE=${SOURCE_EXCLUDE:-""}
+ARCH_EXCLUDE=${ARCH_EXCLUDE:-""}
 # Exclude architectures defined in $ARCH_EXCLUDE
 for ARCH in ${ARCH_EXCLUDE}; do
     EXCLUDE=${EXCLUDE}"\
@@ -314,7 +315,7 @@ exec >"$LOG" 2>&1
 log "Mirrorsync start"
 log "Acquired main lock"
 
-if [ "xtruex" = "x${SYNCCALLBACK}x" ] || [ "xnonex" = "x${CALLBACKHOST}x" ] || [ "xnonex" = "x${CALLBACKKEY}x"]; then
+if [ "xtruex" = "x${SYNCCALLBACK}x" ] && [ "xnonex" = "x${CALLBACKHOST}x" ] || [ "xnonex" = "x${CALLBACKKEY}x"]; then
 	SYNCCALLBACK="false"
 	error "We are asked to call back, but we do not know where to and do not have a key, ignoring callback"
 fi
@@ -341,7 +342,7 @@ while [ -e "${UPDATEREQUIRED}" ]; do
 	rm -f "${UPDATEREQUIRED}"
 
 	# if we want stage1 *or* all
-	if [ "xtruex" = "x${SYNCSTAGE1}x"] || [ "xtruex" = "x${SYNCALL}x"]; then
+	if [ "xtruex" = "x${SYNCSTAGE1}x"] || [ "xtruex" = "x${SYNCALL}x" ]; then
 		log "Running stage1: ${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS1} ${EXCLUDE} ${SOURCE_EXCLUDE}  ${RSYNCPTH}::${RSYNC_PATH} ${TO}"
 
 		set +e
@@ -366,7 +367,7 @@ while [ -e "${UPDATEREQUIRED}" ]; do
 	hook $HOOK
 
 	# if we want stage2 *or* all
-	if [ "xtruex" = "x${SYNCSTAGE2}x"] || [ "xtruex" = "x${SYNCALL}x"]; then
+	if [ "xtruex" = "x${SYNCSTAGE2}x"] || [ "xtruex" = "x${SYNCALL}x" ]; then
 		log "Running stage2: ${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS2} ${EXCLUDE} ${SOURCE_EXCLUDE} ${RSYNCPTH}::${RSYNC_PATH} ${TO}"
 
 		set +e
