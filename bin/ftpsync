@@ -160,6 +160,7 @@ fi
 
 # If we have been told to do stuff for a different archive than default,
 # set the name accordingly.
+ARCHIVE=${ARCHIVE:-""}
 if [ -n "${ARCHIVE}" ]; then
 	NAME="${NAME}-${ARCHIVE}"
 fi
