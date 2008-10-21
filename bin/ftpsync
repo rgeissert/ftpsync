@@ -342,7 +342,7 @@ while [ -e "${UPDATEREQUIRED}" ]; do
 	rm -f "${UPDATEREQUIRED}"
 
 	# if we want stage1 *or* all
-	if [ "xtruex" = "x${SYNCSTAGE1}x"] || [ "xtruex" = "x${SYNCALL}x" ]; then
+	if [ "xtruex" = "x${SYNCSTAGE1}x" ] || [ "xtruex" = "x${SYNCALL}x" ]; then
 		log "Running stage1: ${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS1} ${EXCLUDE} ${SOURCE_EXCLUDE}  ${RSYNCPTH}::${RSYNC_PATH} ${TO}"
 
 		set +e
@@ -367,7 +367,7 @@ while [ -e "${UPDATEREQUIRED}" ]; do
 	hook $HOOK
 
 	# if we want stage2 *or* all
-	if [ "xtruex" = "x${SYNCSTAGE2}x"] || [ "xtruex" = "x${SYNCALL}x" ]; then
+	if [ "xtruex" = "x${SYNCSTAGE2}x" ] || [ "xtruex" = "x${SYNCALL}x" ]; then
 		log "Running stage2: ${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS2} ${EXCLUDE} ${SOURCE_EXCLUDE} ${RSYNCPTH}::${RSYNC_PATH} ${TO}"
 
 		set +e
