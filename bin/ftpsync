@@ -138,6 +138,7 @@ NAME="`basename $0`"
 # The original command line arguments need to be saved!
 ORIGINAL_COMMAND="$*"
 
+SSH_ORIGINAL_COMMAND=${SSH_ORIGINAL_COMMAND:""}
 # Now, check if we got told about stuff via ssh
 if [ -n "${SSH_ORIGINAL_COMMAND}" ]; then
     # We deliberately add "nothing" and ignore it right again, to avoid
