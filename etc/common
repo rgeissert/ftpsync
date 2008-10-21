@@ -50,10 +50,10 @@ signal () {
 
 		PUSHARGS=""
 		if [ -n ${PUSHARCHIVE} ]; then
-			PUSHARGS="${PUSHARGS sync:archive:${PUSHARCHIVE}"
+			PUSHARGS="${PUSHARGS} sync:archive:${PUSHARCHIVE}"
 		fi
 		if [ -n ${PUSHCB} ]; then
-			PUSHARGS="${PUSHARGS sync:callback"
+			PUSHARGS="${PUSHARGS} sync:callback"
 		fi
 
 		# Step1: Do a push to only sync stage1, do not background
@@ -73,15 +73,15 @@ signal () {
 					found=$((found + 1))
 				fi
 			done
-			if [ ${total} -eq ${found} ];
-				break;
+			if [ ${total} -eq ${found} ]; then
+				break
 			fi
 			sleep 20
 		done
 		rm -f "${PUSHLOCKOWN}"
 
 		# Step3: It either timed out or we have all the "lock"files, sync stage2
-		PUSHARGS1="sync:stage2"
+		PUSHARGS2="sync:stage2"
 		ssh $SSH_OPTIONS -i "${SSHKEY}" -o"user ${USERNAME}" -${SSHPROTO} "${HOSTNAME}" "${PUSHARGS} ${PUSHARGS2}" >>"${LOGDIR}/${MIRROR}.log" 2>&1
 	else
 		# Can't decide? Then you get nothing.
