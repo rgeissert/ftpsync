@@ -28,11 +28,22 @@ signal () {
 	ARGS="SIGNAL_OPTS[*]"
 	local ${!ARGS}
 
+	MIRROR=${MIRROR:-""}
+	HOSTNAME=${HOSTNAME:-""}
+	USERNAME=${USERNAME:-""}
+	SSHPROTO=${SSHPROTO:-""}
+	SSHKEY=${SSHKEY:-""}
+	PUSHLOCKOWN=${PUSHLOCKOWN:-""}
+	PUSHTYPE=${PUSHTYPE:-"all"}
+	PUSHARCHIVE=${PUSHARCHIVE:-""}
+	PUSHCB=${PUSHCB:-""}
+	PUSHLOCKS=${PUSHLOCKS:-""}
+
 	# Defaults we always want, no matter what
 	SSH_OPTIONS="-o BatchMode=yes -o SetupTimeOut=45 -o ConnectTimeout=45 -o PasswordAuthentication=no"
 
-	if [ $SSHOPTS -n ]; then
-		SSH_OPTIONS="$SSH_OPTIONS $SSHOPTS"
+	if [ ${SSHOPTS} -n ]; then
+		SSH_OPTIONS="${SSH_OPTIONS} $[SSHOPTS}"
 	fi
 
 	if [ ${SSHPROTO} -ne 1 ] && [ ${SSHPROTO} -ne 2 ]; then
