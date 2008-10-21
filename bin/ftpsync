@@ -111,6 +111,7 @@ cleanup() {
 	rm -f "${LOCK}";
 }
 
+# Check rsyncs return value
 check_rsync() {
 
 	ret=$1
@@ -118,14 +119,13 @@ check_rsync() {
 
 	# 24 - vanished source files. Ignored, that should be the target of $UPDATEREQUIRED
 	# and us re-running. If it's not, uplink is broken anyways.
-
-	case "$1" in
+	case "${ret}" in
 		0) return 0;;
 		24) return 0;;
 		*)
-		error "ERROR: $msg"
-		return 1
-		;;
+			error "ERROR: ${msg}"
+			return 1
+			;;
 	esac
 }
 
@@ -248,7 +248,7 @@ CALLBACKUSER=${CALLBACKUSER:-"archvsync"}
 CALLBACKHOST=${CALLBACKHOST:-"none"}
 CALLBACKKEY=${CALLBACKKEY:-"none"}
 
-# General excludes. Dont list architecture specific stuff here, use ARCH_EXCLUDE for that!
+# General excludes. Don't list architecture specific stuff here, use ARCH_EXCLUDE for that!
 EXCLUDE=${EXCLUDE:-""}
 
 # The temp directory used by rsync --delay-updates is not
@@ -342,10 +342,12 @@ while [ -e "${UPDATEREQUIRED}" ]; do
 	if [ "xtruex" = "x${SYNCSTAGE1}x"] || [ "xtruex" = "x${SYNCALL}x"]; then
 		log "Running stage1: ${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS1} ${EXCLUDE} ${SOURCE_EXCLUDE}  ${RSYNCPTH}::${RSYNC_PATH} ${TO}"
 
+		set +e
 		# Step one, sync everything except Packages/Releases
 		${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS1} ${EXCLUDE} ${SOURCE_EXCLUDE} \
 			${RSYNCPTH}::${RSYNC_PATH} "${TO}" >"${LOGDIR}/rsync-${NAME}.log" 2>"${LOGDIR}/rsync-${NAME}.error"
 		result=$?
+		set -e
 
 		log "Back from rsync with returncode ${result}"
 	else
@@ -365,11 +367,13 @@ while [ -e "${UPDATEREQUIRED}" ]; do
 	if [ "xtruex" = "x${SYNCSTAGE2}x"] || [ "xtruex" = "x${SYNCALL}x"]; then
 		log "Running stage2: ${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS2} ${EXCLUDE} ${SOURCE_EXCLUDE} ${RSYNCPTH}::${RSYNC_PATH} ${TO}"
 
+		set +e
 		# We are lucky, it worked. Now do step 2 and sync again, this time including
 		# the packages/releases files
 		${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS2} ${EXCLUDE} ${SOURCE_EXCLUDE} \
 			${RSYNCPTH}::${RSYNC_PATH} "${TO}" >>${LOGDIR}/rsync-${NAME}.log 2>>${LOGDIR}/rsync-${NAME}.error
 		result=$?
+		set -e
 
 		log "Back from rsync with returncode ${result}"
 	else

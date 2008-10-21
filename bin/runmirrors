@@ -34,13 +34,13 @@ if [ -n "$1" ]; then
 fi
 
 # Read our config file
-. ${BASEDIR}/etc/${NAME}.conf
+. "${BASEDIR}/etc/${NAME}.conf"
 
 # Make sure some variables are always in the environment
 export HOME LOGNAME USER PATH BASEDIR
 
 # Source our common functions
-. ${BASEDIR}/etc/common
+. "${BASEDIR}/etc/common"
 
 # Set sane defaults if the configfile didn't do that for us.
 # The directory for our logfiles
@@ -51,8 +51,6 @@ LOG=${LOG:-"${LOGDIR}/${NAME}.log"}
 LOCKDIR=${LOCKDIR:-"${BASEDIR}/locks"}
 # How to rotate the log
 SAVELOG=${SAVELOG:-"savelog -t -c 14"}
-# Amount of delay between mirrors if the mirror file contains a DELAY
-DELAY=${DELAY:-"60"}
 # Our mirrorfile
 MIRRORS=${MIRRORS:-"${BASEDIR}/etc/${NAME}.mirror"}
 # used by log()
@@ -65,19 +63,18 @@ cd ${BASEDIR}
 umask 022
 
 # Make sure we have our log and lock directories
-mkdir -p ${LOGDIR}
-mkdir -p ${LOCKDIR}
+mkdir -p "${LOGDIR}"
+mkdir -p "${LOCKDIR}"
 
 trap 'log "Mirrorpush done" >> ${LOG}; ${SAVELOG} "${LOG}" > /dev/null' EXIT
 
 log "Pushing leaf mirrors" >> ${LOG}
 
-if [ -n "${HOOK1}" ]; then
-	log "Running hook1: ${HOOK1}" >> ${LOG}
-	${HOOK1}
-	result=$?
-	log "Back from hook1, got returncode ${result}" >> ${LOG}
-fi
+HOOK=(
+	HOOKNR=1
+	HOOKSCR=${HOOK1}
+)
+hook $HOOK
 
 # From here on we do *NOT* want to exit on errors. We don't want to
 # stop pushing mirrors just because we can't reach one of them.
@@ -85,19 +82,19 @@ set +e
 
 # Built up our list of 2-stage mirrors.
 PUSHLOCKS=""
-egrep '^staged' ${MIRRORS} |
+egrep '^staged' "${MIRRORS}" |
 while read MTYPE MLNAME MHOSTNAME MUSER MPROTO MKEYFILE; do
 	PUSHLOCKS="${PUSHLOCKS} ${LOCKDIR}/${MLNAME}.stage1"
 done
 
 # Now read our mirrorfile and push the mirrors defined in there.
 # We use grep to easily sort out all lines having a # in front of them or are empty.
-egrep -v '^[[:space:]]*(#|$)' ${MIRRORS} |
+egrep -v '^[[:space:]]*(#|$)' "${MIRRORS}" |
 while read MTYPE MLNAME MHOSTNAME MUSER MPROTO MKEYFILE; do
 	if [ "x${MTYPE}x" = "xDELAYx" ]; then
 		# We should wait a bit.
-		log "Delay of ${DELAY} seconds requested, sleeping" >> ${LOG}
-		sleep ${DELAY}
+		log "Delay of ${MLNAME} requested, sleeping" >> "${LOG}"
+		sleep ${MLNAME}
 		continue
 	fi
 
@@ -131,19 +128,18 @@ while read MTYPE MLNAME MHOSTNAME MUSER MPROTO MKEYFILE; do
 	signal "${SIGNAL_OPTS}" &
 	log "Trigger for ${MLNAME} done" >> ${LOG}
 
-	if [ -n "${HOOK2}" ]; then
-		log "Running hook2: ${HOOK2}" >> ${LOG}
-		${HOOK1}
-		result=$?
-		log "Back from hook2, got returncode ${result}" >> ${LOG}
-	fi
+	HOOK=(
+		HOOKNR=2
+		HOOKSCR=${HOOK2}
+	)
+	hook $HOOK
+	set +e
 done
 
-if [ -n "${HOOK3}" ]; then
-	log "Running hook3: ${HOOK3}" >> ${LOG}
-	${HOOK3}
-	result=$?
-	log "Back from hook3, got returncode ${result}" >> ${LOG}
-fi
+HOOK=(
+	HOOKNR=3
+	HOOKSCR=${HOOK3}
+)
+hook $HOOK
 
 exit 0

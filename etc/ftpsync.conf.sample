@@ -4,7 +4,7 @@ RSYNC_USER=USER
 RSYNC_PASSWORD=PASSWORD
 RSYNC_PATH="debian-all"
 PROGRAM=ftpsync
-MAILTO="somewhere@example.com"
+MAILTO="root"
 ERRORSONLY="false"
 # Hook scripts can be run at various places during the sync.
 # Leave them blank if you don't want any

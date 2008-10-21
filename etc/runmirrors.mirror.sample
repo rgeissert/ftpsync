@@ -27,6 +27,7 @@
 # finish stage1 before stage2 gets pushed.
 #
 # One special value is allowed: DELAY
-# This word has to be on a line itself, nothing else, not even
-# whitespace. It will trigger a pause of $DELAY seconds between the two
-# mirrors. Per default DELAY is set to 60.
+# This word has to be on a line itself, followed by a space and a number.
+# nothing else, not even whitespace. It will trigger a pause of $number
+# seconds between the two mirrors. If no number is given it defaults to
+# 60 seconds.
