@@ -57,7 +57,7 @@ signal () {
 	if [ "xallx" = "x${PUSHTYPE}x" ]; then
 		# Default normal "fire and forget" push
 		ssh $SSH_OPTIONS -i "${SSHKEY}" -o"user ${USERNAME}" -${SSHPROTO} "${HOSTNAME}" "sync:all" >>"${LOGDIR}/${MIRROR}.log" 2>&1 &
-	elif [ "xstagedx" = "x{$PUSHTYPE}x" ]; then
+	elif [ "xstagedx" = "x${PUSHTYPE}x" ]; then
 		# Want a staged push. Fine, lets do that
 
 		PUSHARGS=""
