@@ -58,6 +58,8 @@ MIRRORS=${MIRRORS:-"${BASEDIR}/etc/${NAME}.mirror"}
 PROGRAM=${PROGRAM:-"${NAME}-$(hostname -s)"}
 # extra ssh options we might want hostwide
 SSH_OPTS=${SSH_OPTS:-""}
+# Whats our archive name? We will also tell our leafs about it
+PUSHARCHIVE=${PUSHARCHIVE:-"${CONF}"}
 
 # Some sane defaults
 cd ${BASEDIR}
@@ -125,6 +127,8 @@ while read MTYPE MLNAME MHOSTNAME MUSER MPROTO MKEYFILE; do
 		SSHKEY="${MKEYFILE}"
 		PUSHLOCKOWN="${LOCKDIR}/${MLNAME}.stage1"
 		PUSHTYPE="${MTYPE}"
+		PUSHLOCKS=${PUSHLOCKS}
+		PUSHARCHIVE=${PUSHARCHIVE}
 	)
 
 	# And finally, push the mirror

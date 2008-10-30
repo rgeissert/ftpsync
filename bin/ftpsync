@@ -418,7 +418,7 @@ if [ x${HUB} = "xtrue" ]; then
 	# Only trigger slave mirrors if we had a push for stage2 or all
 	if [ "xtruex" = "x${SYNCSTAGE2}x" ] || [ "xtruex" = "x${SYNCALL}x" ]; then
 		log "Trigger slave mirrors"
-		${BASEDIR}/bin/runmirrors
+		${BASEDIR}/bin/runmirrors ${ARCHIVE}
 		log "Trigger slave done"
 
 		HOOK=(
