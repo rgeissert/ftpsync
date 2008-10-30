@@ -75,7 +75,7 @@ signal () {
 		# Step2: Wait for all the other "lock"files to appear.
 		tries=0
 		# We do not wait forever
-		while [ ${tries} -lt 120 ]; do
+		while [ ${tries} -lt ${PUSHDELAY} ]; do
 			total=0
 			found=0
 			for file in ${PUSHLOCKS}; do

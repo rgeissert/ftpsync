@@ -60,6 +60,8 @@ PROGRAM=${PROGRAM:-"${NAME}-$(hostname -s)"}
 SSH_OPTS=${SSH_OPTS:-""}
 # Whats our archive name? We will also tell our leafs about it
 PUSHARCHIVE=${PUSHARCHIVE:-"${CONF}"}
+# How long to wait for mirrors to do stage1 if we have multi-stage syncing
+PUSHDELAY=${PUSHDELAY:-240}
 
 # Some sane defaults
 cd ${BASEDIR}
