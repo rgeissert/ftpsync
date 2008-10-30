@@ -113,7 +113,7 @@ callback () {
 #
 # Set $PROGRAM to a string to have it added to the output.
 log () {
-	if [ -z ${PROGRAM} ]; then
+	if [ -z "${PROGRAM}" ]; then
 		echo "$(date +"%b %d %H:%M:%S") $(hostname -s) [$$] $@"
 	else
 		echo "$(date +"%b %d %H:%M:%S") $(hostname -s) ${PROGRAM}[$$]: $@"
@@ -124,7 +124,7 @@ log () {
 # to the address configured in MAILTO (if non-empty)
 error () {
 	log "$@"
-	if [ -z ${MAILTO} ]; then
+	if [ -z "${MAILTO}" ]; then
 		echo "$@" | mail -e -s "[$PROGRAM@$(hostname -s)] ERROR [$$]" ${MAILTO}
 	fi
 }
