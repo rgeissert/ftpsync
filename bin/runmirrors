@@ -84,11 +84,7 @@ hook $HOOK
 set +e
 
 # Built up our list of 2-stage mirrors.
-PUSHLOCKS=""
-egrep '^staged' "${MIRRORS}" |
-while read MTYPE MLNAME MHOSTNAME MUSER MPROTO MKEYFILE; do
-	PUSHLOCKS="${PUSHLOCKS} ${LOCKDIR}/${MLNAME}.stage1"
-done
+PUSHLOCKS=$(get2stage)
 
 # Now read our mirrorfile and push the mirrors defined in there.
 # We use grep to easily sort out all lines having a # in front of them or are empty.

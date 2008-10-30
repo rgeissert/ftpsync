@@ -147,3 +147,14 @@ hook () {
 		return 0
 	fi
 }
+
+# Return the list of 2-stage mirrors.
+get2stage() {
+	egrep '^staged' "${MIRRORS}" | {
+		while read MTYPE MLNAME MHOSTNAME MUSER MPROTO MKEYFILE; do
+			PUSHLOCKS="${LOCKDIR}/${MLNAME}.stage1 ${PUSHLOCKS}"
+		done
+		echo "$PUSHLOCKS"
+	}
+}
+
