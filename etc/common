@@ -42,7 +42,7 @@ signal () {
 	# Defaults we always want, no matter what
 	SSH_OPTIONS="-o BatchMode=yes -o SetupTimeOut=45 -o ConnectTimeout=45 -o PasswordAuthentication=no"
 
-	if [ ${SSHOPTS} -n ]; then
+	if [ -n "${SSHOPTS}" ]; then
 		SSH_OPTIONS="${SSH_OPTIONS} ${SSHOPTS}"
 	fi
 
@@ -60,10 +60,10 @@ signal () {
 		# Want a staged push. Fine, lets do that
 
 		PUSHARGS=""
-		if [ -n ${PUSHARCHIVE} ]; then
+		if [ -n "${PUSHARCHIVE}" ]; then
 			PUSHARGS="${PUSHARGS} sync:archive:${PUSHARCHIVE}"
 		fi
-		if [ -n ${PUSHCB} ]; then
+		if [ -n "${PUSHCB}" ]; then
 			PUSHARGS="${PUSHARGS} sync:callback"
 		fi
 
