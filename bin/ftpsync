@@ -209,7 +209,7 @@ TO=${TO:-"/org/ftp.debian.org/ftp/"}
 PROGRAM=${PROGRAM:-"${NAME}-$(hostname -s)"}
 
 # Where to send mails about mirroring to?
-if [ "x${HOSTNAME}x" = "x${HOSTNAME%%.debian.org}x" ]; then
+if [ "x${HOSTNAME}x" != "x${HOSTNAME%%.debian.org}x" ]; then
 	# We are not on a debian.org host
 	MAILTO=${MAILTO:-"root"}
 else
