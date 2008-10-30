@@ -84,7 +84,11 @@ hook $HOOK
 set +e
 
 # Built up our list of 2-stage mirrors.
+PUSHLOCKS=""
 PUSHLOCKS=$(get2stage)
+
+# In case we have it - remove. It is used to synchronize multi-stage mirroring
+rm -f "${LOCKDIR}/all_stage1"
 
 # Now read our mirrorfile and push the mirrors defined in there.
 # We use grep to easily sort out all lines having a # in front of them or are empty.
@@ -123,7 +127,6 @@ while read MTYPE MLNAME MHOSTNAME MUSER MPROTO MKEYFILE; do
 		SSHKEY="${MKEYFILE}"
 		PUSHLOCKOWN="${LOCKDIR}/${MLNAME}.stage1"
 		PUSHTYPE="${MTYPE}"
-		PUSHLOCKS=${PUSHLOCKS}
 		PUSHARCHIVE=${PUSHARCHIVE}
 	)
 

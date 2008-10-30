@@ -38,7 +38,6 @@ signal () {
 	PUSHTYPE=${PUSHTYPE:-"all"}
 	PUSHARCHIVE=${PUSHARCHIVE:-""}
 	PUSHCB=${PUSHCB:-""}
-	PUSHLOCKS=${PUSHLOCKS:-""}
 
 	# Defaults we always want, no matter what
 	SSH_OPTIONS="-o BatchMode=yes -o SetupTimeOut=45 -o ConnectTimeout=45 -o PasswordAuthentication=no"
@@ -76,7 +75,7 @@ signal () {
 		# Step2: Wait for all the other "lock"files to appear.
 		tries=0
 		# We do not wait forever
-		while [ ${tries} -lt 30 ]; do
+		while [ ${tries} -lt 120 ]; do
 			total=0
 			found=0
 			for file in ${PUSHLOCKS}; do
@@ -85,10 +84,11 @@ signal () {
 					found=$((found + 1))
 				fi
 			done
-			if [ ${total} -eq ${found} ]; then
+			if [ ${total} -eq ${found} ] || [ -f "${LOCKDIR}/all_stage1" ]; then
+				touch "${LOCKDIR}/all_stage1"
 				break
 			fi
-			sleep 20
+			sleep 5
 		done
 		rm -f "${PUSHLOCKOWN}"
 
