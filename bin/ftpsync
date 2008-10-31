@@ -400,7 +400,7 @@ while [ -e "${UPDATEREQUIRED}" ]; do
 	hook $HOOK
 done
 
-if [ -d "${TO}/project/trace" ]; then
+if [ -d "`dirname "${TO}/${TRACE}"`" ]; then
       date -u > "${TO}/${TRACE}"
 fi
 
@@ -420,7 +420,7 @@ if [ x${HUB} = "xtrue" ]; then
 	# Only trigger slave mirrors if we had a push for stage2 or all
 	if [ "xtruex" = "x${SYNCSTAGE2}x" ] || [ "xtruex" = "x${SYNCALL}x" ]; then
 		log "Trigger slave mirrors"
-		${BASEDIR}/bin/runmirrors ${ARCHIVE}
+		${BASEDIR}/bin/runmirrors "${ARCHIVE}"
 		log "Trigger slave done"
 
 		HOOK=(
