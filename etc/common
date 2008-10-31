@@ -42,8 +42,8 @@ signal () {
 	# Defaults we always want, no matter what
 	SSH_OPTIONS="-o BatchMode=yes -o SetupTimeOut=45 -o ConnectTimeout=45 -o PasswordAuthentication=no"
 
-	if [ -n "${SSHOPTS}" ]; then
-		SSH_OPTIONS="${SSH_OPTIONS} ${SSHOPTS}"
+	if [ -n "${SSH_OPTS}" ]; then
+		SSH_OPTIONS="${SSH_OPTIONS} ${SSH_OPTS}"
 	fi
 
 	if [ ${SSHPROTO} -ne 1 ] && [ ${SSHPROTO} -ne 2 ]; then
