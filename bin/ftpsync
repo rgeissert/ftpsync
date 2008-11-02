@@ -317,7 +317,9 @@ trap cleanup EXIT ERR TERM HUP INT QUIT
 
 # Start log by redirecting everything there.
 exec >"$LOG" 2>&1
-log "Mirrorsync start"
+
+# Look who pushed us and note that in the log.
+log "Mirrorsync start, we got pushed from ${SSH_CONNECTION%%\ *}"
 log "Acquired main lock"
 
 if [ "xtruex" = "x${SYNCCALLBACK}x" ]; then
