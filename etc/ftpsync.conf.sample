@@ -1,29 +1,132 @@
-TO=/org/ftp.debian.org/ftp/
-RSYNC_HOST=some.mirror.debian.org
-RSYNC_USER=USER
-RSYNC_PASSWORD=PASSWORD
-RSYNC_PATH="debian-all"
-PROGRAM=ftpsync
-MAILTO="root"
-ERRORSONLY="false"
-# Hook scripts can be run at various places during the sync.
-# Leave them blank if you don't want any
-# Hook1: After lock is acquired, before first rsync
-# Hook2: After first rsync, if successful
-# Hook3: After second rsync, if successful
-# Hook4: Right before leaf mirror triggering
-# Hook5: After leaf mirror trigger, only if we have slave mirrors (HUB=true)
-#
-# Note that Hook3 and Hook4 are likely to be called directly after each other.
-# Difference is: Hook3 is called *every* time the second rsync was successful,
-# but even if the mirroring needs to re-run thanks to a second push.
-# Hook4 is only effective if we are done with mirroring.
-HOOK1=
-HOOK2=
-HOOK3=
-HOOK4=
-HOOK5=
-# Do we have leaf mirror to signal we are done and they should sync?
-# If so set it to true and make sure you configure runmirrors.mirrors
-# and runmirrors.conf for your need.
-HUB=false
+########################################################################
+########################################################################
+## This is a sample configuration file for the ftpsync mirror script. ##
+## Most of the values are commented out and just shown here for       ##
+## completeness, together with their default value.                   ##
+########################################################################
+########################################################################
+
+## Hostname. This is used for things like the trace file and should always
+## be the full hostname of the mirror.
+#HOSTNAME=`hostname -f`
+
+## In which directory should logfiles end up
+## Note that BASEDIR defaults to $HOME, but can be set before calling the
+## ftpsync script to any value you want (for example using pam_env)
+#LOGDIR="${BASEDIR}/log"
+
+## Name of our own logfile.
+## Note that ${NAME} is set by the ftpsync script depending on the way it
+## is called. See README for a description of the multi-archive capability
+## and better always include ${NAME} in this path.
+#LOG="${LOGDIR}/${NAME}.log"
+
+## Destination of the mirrored files. Should be an empty directory.
+## CAREFUL, this directory will contain the mirror. Everything else
+## that might have happened to be in there WILL BE GONE after the mirror sync!
+#TO="/org/ftp.debian.org/ftp/"
+
+## The script can send logs (or error messages) to a mail address.
+## If this is unset it will default to the local root user unless it is run
+## on a .debian.org machine where it will default to the mirroradm people.
+#MAILTO="root"
+
+## If you do not want a mail about every single sync, set this to something
+## false. Everything else will only send mails if a mirror sync fails
+#ERRORSONLY="false"
+
+## We do create three logfiles for every run. To save space we rotate them, this
+## defines how.
+#SAVELOG="savelog -t -c 14"
+
+## We need to deal with lockfiles
+#LOCKFILE="lockfile"
+
+## Our own lockfile (only one sync should run at any time)
+#LOCK="${TO}/Archive-Update-in-Progress-${HOSTNAME}"
+
+## The following file is used to make sure we will end up with a correctly
+## synced mirror even if we get multiple pushes in a short timeframe
+#UPDATEREQUIRED="${TO}/Archive-Update-Required-${HOSTNAME}"
+
+## The trace file is used by a mirror check tool to see when we last
+## had a successful mirror sync. Make sure that it always ends up in
+## project/trace and always shows the full hostname.
+## This is *relative* to ${TO}
+#TRACE="project/trace/$(hostname -f)"
+
+
+## We sync our mirror using rsync (everything else would be insane), so
+## we need a few options set.
+## The rsync program
+#RSYNC=rsync
+
+## Default rsync options every rsync invocation sees.
+#RSYNC_OPTIONS="-rltvHSB8192 --timeout 3600 --stats --exclude Archive-Update-in-Progress-${HOSTNAME} --exclude ${TRACE} --exclude Archive-Update-Required-${HOSTNAME}"
+
+## Options the first pass gets. We do not want the Packages/Source indices
+## here, and we also do not want to delete any files yet.
+#RSYNC_OPTIONS1="--exclude Packages* --exclude Sources* --exclude Release* --exclude ls-lR*"
+
+## Options the second pass gets. Now we want the Packages/Source indices too
+## and we also want to delete files. We also want to delete files that are
+## excluded.
+#RSYNC_OPTIONS2="--max-delete=40000 --delay-updates --delete --delete-after --delete-excluded"
+
+## The upstream name of the rsync share.
+#RSYNC_PATH="ftp"
+
+## The host we mirror from
+#RSYNC_HOST=some.mirror.debian.org
+
+## In case we need a user to access the rsync share at our upstream host
+#RSYNC_USER=
+
+## If we need a user we also need a password
+#RSYNC_PASSWORD=
+
+## The following three options are used in case we want to "callback" the host
+## we got pushed from.
+#CALLBACKUSER="archvsync"
+#CALLBACKHOST="none"
+#CALLBACKKEY="none"
+
+
+## If you do want to exclude files from the mirror run, put --exclude statements here.
+## See rsync(1) for the exact syntax, these are passed to rsync as written here.
+## DO NOT TRY TO EXCLUDE ARCHITECTURES OR SUITES WITH THIS, IT WILL NOT WORK!
+#EXCLUDE=""
+
+
+## If you do want to exclude an architecture, this is for you.
+## Use as space seperated list.
+## Possible values are:
+## alpha, amd64, arm, armel, hppa, hurd-i386, i386, ia64,
+## m68k, mipsel, mips, powerpc, s390, sh, sparc and source
+## eg. ARCH_EXCLUDE="alpha arm armel mipsel mips s390 sparc"
+## An unset value will mirror all architectures (default!)
+#ARCH_EXCLUDE=""
+
+
+## Hook scripts can be run at various places during the sync.
+## Leave them blank if you don't want any
+## Hook1: After lock is acquired, before first rsync
+## Hook2: After first rsync, if successful
+## Hook3: After second rsync, if successful
+## Hook4: Right before leaf mirror triggering
+## Hook5: After leaf mirror trigger, only if we have slave mirrors (HUB=true)
+##
+## Note that Hook3 and Hook4 are likely to be called directly after each other.
+## Difference is: Hook3 is called *every* time the second rsync was successful,
+## but even if the mirroring needs to re-run thanks to a second push.
+## Hook4 is only effective if we are done with mirroring.
+#HOOK1=
+#HOOK2=
+#HOOK3=
+#HOOK4=
+#HOOK5=
+
+## Do we have leaf mirror to signal we are done and they should sync?
+## If so set it to true and make sure you configure runmirrors.mirrors
+## and runmirrors.conf for your need.
+#HUB=false

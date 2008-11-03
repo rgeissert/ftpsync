@@ -242,6 +242,12 @@ RSYNC_OPTIONS2=${RSYNC_OPTIONS2:-"--max-delete=40000 --delay-updates --delete --
 # Which rsync share to use on our upstream mirror?
 RSYNC_PATH=${RSYNC_PATH:-"ftp"}
 
+# our username for the rsync share
+RSYNC_USER=${RSYNC_USER:-""}
+# the password
+RSYNC_PASSWORD=${RSYNC_PASSWORD:-""}
+
+
 # Do we sync stage1?
 SYNCSTAGE1=${SYNCSTAGE1:-"false"}
 # Do we sync stage2?
