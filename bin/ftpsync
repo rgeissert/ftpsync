@@ -247,6 +247,8 @@ RSYNC_USER=${RSYNC_USER:-""}
 # the password
 RSYNC_PASSWORD=${RSYNC_PASSWORD:-""}
 
+# a possible proxy
+RSYNC_PROXY=${RSYNC_PROXY:-""}
 
 # Do we sync stage1?
 SYNCSTAGE1=${SYNCSTAGE1:-"false"}
@@ -355,6 +357,7 @@ fi
 
 # Now do the actual mirroring, and run as long as we have an updaterequired file.
 export RSYNC_PASSWORD
+export RSYNC_PROXY
 
 while [ -e "${UPDATEREQUIRED}" ]; do
 	log "Running mirrorsync, update is required, ${UPDATEREQUIRED} exists"

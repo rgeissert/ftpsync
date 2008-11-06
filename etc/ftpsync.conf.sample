@@ -90,6 +90,12 @@
 ## If we need a user we also need a password
 #RSYNC_PASSWORD=
 
+# You may establish the connection via a web proxy by setting the environment
+# variable RSYNC_PROXY to a hostname:port pair pointing to your web proxy.  Note
+# that your web proxy's configuration must support proxy connections to port 873.
+# RSYNC_PROXY=
+
+
 ## The following three options are used in case we want to "callback" the host
 ## we got pushed from.
 #CALLBACKUSER="archvsync"
