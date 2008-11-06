@@ -43,7 +43,7 @@ sensible value.
 Debian mirror script minimum requirements
 =========================================
 As always, you may use whatever scripts you want for your Debian mirror,
-but we *STRONGLY* recommend you to not invnt your own. However, if you
+but we *STRONGLY* recommend you to not invent your own. However, if you
 want to be listed as a Primary mirror it must support the following
 minimal functionality:
 
