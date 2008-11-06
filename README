@@ -27,7 +27,7 @@ For impatient people, short usage instruction:
  - Place the ftpsync.conf.sample into $HOME/etc as ftpsync.conf and edit
    it to suit your system.  You should at the very least change the TO= 
    line.
- - Setup .ssh/authorized_keys for the mirror user and place the public key of
+ - Setup the .ssh/authorized_keys for the mirror user and place the public key of
    your upstream mirror into it. Preface it with
 no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty,command="~/bin/ftpsync",from="IPADDRESS" 
    and replace $IPADDRESS with that of your upstream mirror.
@@ -44,8 +44,8 @@ Debian mirror script minimum requirements
 =========================================
 As always, you may use whatever scripts you want for your Debian mirror,
 but we *STRONGLY* recommend you to not invent your own. However, if you
-want to be listed as a Primary mirror it must support the following
-minimal functionality:
+want to be listed as a mirror it *MUST* support the following minimal
+functionality:
 
  - Must perform a 2-stage sync
    The archive mirroring must be done in 2 stages. The first rsync run
