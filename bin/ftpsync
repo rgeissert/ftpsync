@@ -29,6 +29,11 @@ set -u
 # for that. Or pam_env. Or whatever fits in the local setup. :)
 BASEDIR=${BASEDIR:-"${HOME}"}
 
+# Script version. DO NOT CHANGE, *unless* you change the master copy maintained
+# by Joerg Jaspert and the Debian mirroradm group.
+# This is used to track which mirror is using which script version.
+VERSION="3.1415926"
+
 # Source our common functions
 . "${BASEDIR}/etc/common"
 
@@ -417,6 +422,7 @@ done
 
 if [ -d "`dirname "${TO}/${TRACE}"`" ]; then
       date -u > "${TO}/${TRACE}"
+      echo "${VERSION}" >> "${TO}/${TRACE}"
 fi
 
 HOOK=(
