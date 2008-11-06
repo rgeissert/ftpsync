@@ -217,7 +217,7 @@ else
 	MAILTO=${MAILTO:-"mirrorlogs@debian.org"}
 fi
 # Want errors only or every log?
-ERRORSONLY=${ERRORSONLY:-"false"}
+ERRORSONLY=${ERRORSONLY:-"true"}
 
 # How to rotate our log
 SAVELOG=${SAVELOG:-"savelog -t -c 14"}
