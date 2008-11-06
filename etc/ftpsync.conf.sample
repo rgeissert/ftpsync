@@ -43,17 +43,17 @@
 #LOCKFILE="lockfile"
 
 ## Our own lockfile (only one sync should run at any time)
-#LOCK="${TO}/Archive-Update-in-Progress-${HOSTNAME}"
+#LOCK="${TO}/Archive-Update-in-Progress-${MIRRORNAME}"
 
 ## The following file is used to make sure we will end up with a correctly
 ## synced mirror even if we get multiple pushes in a short timeframe
-#UPDATEREQUIRED="${TO}/Archive-Update-Required-${HOSTNAME}"
+#UPDATEREQUIRED="${TO}/Archive-Update-Required-${MIRRORNAME}"
 
 ## The trace file is used by a mirror check tool to see when we last
 ## had a successful mirror sync. Make sure that it always ends up in
 ## project/trace and always shows the full hostname.
 ## This is *relative* to ${TO}
-#TRACE="project/trace/$(hostname -f)"
+#TRACE="project/trace/${MIRRORNAME}"
 
 
 ## We sync our mirror using rsync (everything else would be insane), so
@@ -67,7 +67,7 @@
 ## BE VERY CAREFUL WHEN YOU CHANGE THE RSYNC OPTIONS! BETTER DON'T!
 
 ## Default rsync options every rsync invocation sees.
-#RSYNC_OPTIONS="-rltvHSB8192 --timeout 3600 --stats --exclude Archive-Update-in-Progress-${HOSTNAME} --exclude ${TRACE} --exclude Archive-Update-Required-${HOSTNAME}"
+#RSYNC_OPTIONS="-rltvHSB8192 --timeout 3600 --stats --exclude Archive-Update-in-Progress-${MIRRORNAME} --exclude ${TRACE} --exclude Archive-Update-Required-${MIRRORNAME}"
 
 ## Options the first pass gets. We do not want the Packages/Source indices
 ## here, and we also do not want to delete any files yet.
