@@ -6,9 +6,9 @@
 ########################################################################
 ########################################################################
 
-## Hostname. This is used for things like the trace file and should always
+## Mirrorname. This is used for things like the trace file and should always
 ## be the full hostname of the mirror.
-#HOSTNAME=`hostname -f`
+#MIRRORNAME=`hostname -f`
 
 ## In which directory should logfiles end up
 ## Note that BASEDIR defaults to $HOME, but can be set before calling the
@@ -31,9 +31,9 @@
 ## on a .debian.org machine where it will default to the mirroradm people.
 #MAILTO="root"
 
-## If you do not want a mail about every single sync, set this to something
-## false. Everything else will only send mails if a mirror sync fails
-#ERRORSONLY="false"
+## If you do want a mail about every single sync, set this to false
+## Everything else will only send mails if a mirror sync fails
+#ERRORSONLY="true"
 
 ## We do create three logfiles for every run. To save space we rotate them, this
 ## defines how.
