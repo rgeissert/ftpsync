@@ -61,6 +61,11 @@
 ## The rsync program
 #RSYNC=rsync
 
+## BE VERY CAREFUL WHEN YOU CHANGE THE RSYNC OPTIONS! BETTER DON'T!
+## BE VERY CAREFUL WHEN YOU CHANGE THE RSYNC OPTIONS! BETTER DON'T!
+## BE VERY CAREFUL WHEN YOU CHANGE THE RSYNC OPTIONS! BETTER DON'T!
+## BE VERY CAREFUL WHEN YOU CHANGE THE RSYNC OPTIONS! BETTER DON'T!
+
 ## Default rsync options every rsync invocation sees.
 #RSYNC_OPTIONS="-rltvHSB8192 --timeout 3600 --stats --exclude Archive-Update-in-Progress-${HOSTNAME} --exclude ${TRACE} --exclude Archive-Update-Required-${HOSTNAME}"
 
