@@ -35,6 +35,11 @@
 ## Everything else will only send mails if a mirror sync fails
 #ERRORSONLY="true"
 
+## If you want the logs to also include output of rsync, set this to true.
+## Careful, the logs can get pretty big, especially if it is the first mirror
+## run
+#FULLLOGS="false"
+
 ## We do create three logfiles for every run. To save space we rotate them, this
 ## defines how.
 #SAVELOG="savelog -t -c 14"

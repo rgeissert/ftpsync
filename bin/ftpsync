@@ -32,7 +32,7 @@ BASEDIR=${BASEDIR:-"${HOME}"}
 # Script version. DO NOT CHANGE, *unless* you change the master copy maintained
 # by Joerg Jaspert and the Debian mirroradm group.
 # This is used to track which mirror is using which script version.
-VERSION="3.1415926"
+VERSION="42"
 
 # Source our common functions
 . "${BASEDIR}/etc/common"
@@ -105,7 +105,12 @@ cleanup() {
 		fi
 		if [ "x${ERRORSONLY}x" = "xfalsex" ]; then
 			# And the normal log
-			mail -e -s "[${PROGRAM}@$(hostname -s)] archive sync finished on $(date +"%Y.%m.%d-%H:%M:%S")" ${MAILTO} < ${LOG}
+			MAILFILES="${LOG}"
+			if [ "x${FULLLOG}x" = "xtruex" ]; then
+				# Someone wants full logs including rsync
+				MAILFILES="${MAILFILES} ${LOGDIR}/rsync-${NAME}.log"
+			fi
+			cat ${MAILFILES} | mail -e -s "[${PROGRAM}@$(hostname -s)] archive sync finished on $(date +"%Y.%m.%d-%H:%M:%S")" ${MAILTO}
 		fi
 	fi
 
@@ -113,7 +118,7 @@ cleanup() {
 	${SAVELOG} "${LOGDIR}/rsync-${NAME}.error"
 	${SAVELOG} "$LOG" > /dev/null
 
-	rm -f "${LOCK}";
+	rm -f "${LOCK}"
 }
 
 # Check rsyncs return value
@@ -223,6 +228,8 @@ else
 fi
 # Want errors only or every log?
 ERRORSONLY=${ERRORSONLY:-"true"}
+# Want full logs, ie. including the rsync one?
+FULLLOGS=${FULLLOGS:-"false"}
 
 # How to rotate our log
 SAVELOG=${SAVELOG:-"savelog -t -c 14"}
