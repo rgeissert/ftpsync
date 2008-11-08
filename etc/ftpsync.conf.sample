@@ -10,6 +10,23 @@
 ## be the full hostname of the mirror.
 #MIRRORNAME=`hostname -f`
 
+## Destination of the mirrored files. Should be an empty directory.
+## CAREFUL, this directory will contain the mirror. Everything else
+## that might have happened to be in there WILL BE GONE after the mirror sync!
+#TO="/org/ftp.debian.org/ftp/"
+
+## The upstream name of the rsync share.
+#RSYNC_PATH="ftp"
+
+## The host we mirror from
+#RSYNC_HOST=some.mirror.debian.org
+
+## In case we need a user to access the rsync share at our upstream host
+#RSYNC_USER=
+
+## If we need a user we also need a password
+#RSYNC_PASSWORD=
+
 ## In which directory should logfiles end up
 ## Note that BASEDIR defaults to $HOME, but can be set before calling the
 ## ftpsync script to any value you want (for example using pam_env)
@@ -20,11 +37,6 @@
 ## is called. See README for a description of the multi-archive capability
 ## and better always include ${NAME} in this path.
 #LOG="${LOGDIR}/${NAME}.log"
-
-## Destination of the mirrored files. Should be an empty directory.
-## CAREFUL, this directory will contain the mirror. Everything else
-## that might have happened to be in there WILL BE GONE after the mirror sync!
-#TO="/org/ftp.debian.org/ftp/"
 
 ## The script can send logs (or error messages) to a mail address.
 ## If this is unset it will default to the local root user unless it is run
@@ -39,6 +51,25 @@
 ## Careful, the logs can get pretty big, especially if it is the first mirror
 ## run
 #FULLLOGS="false"
+
+## If you do want to exclude files from the mirror run, put --exclude statements here.
+## See rsync(1) for the exact syntax, these are passed to rsync as written here.
+## DO NOT TRY TO EXCLUDE ARCHITECTURES OR SUITES WITH THIS, IT WILL NOT WORK!
+#EXCLUDE=""
+
+## If you do want to exclude an architecture, this is for you.
+## Use as space seperated list.
+## Possible values are:
+## alpha, amd64, arm, armel, hppa, hurd-i386, i386, ia64,
+## m68k, mipsel, mips, powerpc, s390, sh and sparc
+## eg. ARCH_EXCLUDE="alpha arm armel mipsel mips s390 sparc"
+## An unset value will mirror all architectures (default!)
+#ARCH_EXCLUDE=""
+
+## Do we have leaf mirror to signal we are done and they should sync?
+## If so set it to true and make sure you configure runmirrors.mirrors
+## and runmirrors.conf for your need.
+#HUB=false
 
 ## We do create three logfiles for every run. To save space we rotate them, this
 ## defines how.
@@ -60,16 +91,15 @@
 ## This is *relative* to ${TO}
 #TRACE="project/trace/${MIRRORNAME}"
 
-
 ## We sync our mirror using rsync (everything else would be insane), so
 ## we need a few options set.
 ## The rsync program
 #RSYNC=rsync
 
-## BE VERY CAREFUL WHEN YOU CHANGE THE RSYNC OPTIONS! BETTER DON'T!
-## BE VERY CAREFUL WHEN YOU CHANGE THE RSYNC OPTIONS! BETTER DON'T!
-## BE VERY CAREFUL WHEN YOU CHANGE THE RSYNC OPTIONS! BETTER DON'T!
-## BE VERY CAREFUL WHEN YOU CHANGE THE RSYNC OPTIONS! BETTER DON'T!
+## BE VERY CAREFUL WHEN YOU CHANGE THE RSYNC_OPTIONS! BETTER DON'T!
+## BE VERY CAREFUL WHEN YOU CHANGE THE RSYNC_OPTIONS! BETTER DON'T!
+## BE VERY CAREFUL WHEN YOU CHANGE THE RSYNC_OPTIONS! BETTER DON'T!
+## BE VERY CAREFUL WHEN YOU CHANGE THE RSYNC_OPTIONS! BETTER DON'T!
 
 ## Default rsync options every rsync invocation sees.
 #RSYNC_OPTIONS="-rltvHSB8192 --timeout 3600 --stats --exclude Archive-Update-in-Progress-${MIRRORNAME} --exclude ${TRACE} --exclude Archive-Update-Required-${MIRRORNAME}"
@@ -83,21 +113,9 @@
 ## excluded.
 #RSYNC_OPTIONS2="--max-delete=40000 --delay-updates --delete --delete-after --delete-excluded"
 
-## The upstream name of the rsync share.
-#RSYNC_PATH="ftp"
-
-## The host we mirror from
-#RSYNC_HOST=some.mirror.debian.org
-
-## In case we need a user to access the rsync share at our upstream host
-#RSYNC_USER=
-
-## If we need a user we also need a password
-#RSYNC_PASSWORD=
-
-# You may establish the connection via a web proxy by setting the environment
-# variable RSYNC_PROXY to a hostname:port pair pointing to your web proxy.  Note
-# that your web proxy's configuration must support proxy connections to port 873.
+## You may establish the connection via a web proxy by setting the environment
+## variable RSYNC_PROXY to a hostname:port pair pointing to your web proxy.  Note
+## that your web proxy's configuration must support proxy connections to port 873.
 # RSYNC_PROXY=
 
 
@@ -106,22 +124,6 @@
 #CALLBACKUSER="archvsync"
 #CALLBACKHOST="none"
 #CALLBACKKEY="none"
-
-
-## If you do want to exclude files from the mirror run, put --exclude statements here.
-## See rsync(1) for the exact syntax, these are passed to rsync as written here.
-## DO NOT TRY TO EXCLUDE ARCHITECTURES OR SUITES WITH THIS, IT WILL NOT WORK!
-#EXCLUDE=""
-
-
-## If you do want to exclude an architecture, this is for you.
-## Use as space seperated list.
-## Possible values are:
-## alpha, amd64, arm, armel, hppa, hurd-i386, i386, ia64,
-## m68k, mipsel, mips, powerpc, s390, sh and sparc
-## eg. ARCH_EXCLUDE="alpha arm armel mipsel mips s390 sparc"
-## An unset value will mirror all architectures (default!)
-#ARCH_EXCLUDE=""
 
 
 ## Hook scripts can be run at various places during the sync.
@@ -141,8 +143,3 @@
 #HOOK3=
 #HOOK4=
 #HOOK5=
-
-## Do we have leaf mirror to signal we are done and they should sync?
-## If so set it to true and make sure you configure runmirrors.mirrors
-## and runmirrors.conf for your need.
-#HUB=false
