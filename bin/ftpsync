@@ -317,6 +317,8 @@ HOOK3=${HOOK3:-""}
 HOOK4=${HOOK4:-""}
 HOOK5=${HOOK5:-""}
 
+# Are we a hub?
+HUB=${HUB:-"false"}
 
 # Some sane defaults
 cd "${BASEDIR}"
