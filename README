@@ -180,6 +180,30 @@ it is complete, use an upstream trigger of
 ssh $USER@$HOST sync:all sync:archive:bpo sync:callback
 
 
+Mirror trace files
+==================
+Every mirror needs to have a 'trace' file under project/trace.
+The file format is as follows:
+
+ The filename has to be the full hostname (eg. hostname -f), or in the
+ case of a mirror participating in RR DNS (where users will never use
+ the hostname) the name of the DNS RR entry, eg. security.debian.org
+ for the security rotation)
+
+ The content has (no leading spaces):
+   Sat Nov  8 13:20:22 UTC 2008
+   Used ftpsync version: 42
+   Running on host: steffani.debian.org
+
+ First line: Output of date -u
+ Second line: Freeform text containing the program name and version
+ Third line: Text "Running on host: " followed by hostname -f
+
+ The third line MUST NOT be the DNS RR name, even if the mirror is part
+ of it. It MUST BE the hosts own name.  This is in contrast to the filename,
+ which SHOULD be the DNS RR name.
+
+
 runmirrors
 ==========
 This script is used to tell leaf mirrors that it is time to synchronize
