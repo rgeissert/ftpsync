@@ -310,6 +310,13 @@ for ARCH in ${ARCH_EXCLUDE}; do
 	fi
 done
 
+# Hooks
+HOOK1=${HOOK1:-""}
+HOOK2=${HOOK2:-""}
+HOOK3=${HOOK3:-""}
+HOOK4=${HOOK4:-""}
+HOOK5=${HOOK5:-""}
+
 
 # Some sane defaults
 cd "${BASEDIR}"
