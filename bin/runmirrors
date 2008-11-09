@@ -63,6 +63,11 @@ PUSHARCHIVE=${PUSHARCHIVE:-"${CONF}"}
 # How long to wait for mirrors to do stage1 if we have multi-stage syncing
 PUSHDELAY=${PUSHDELAY:-240}
 
+# Hooks
+HOOK1=${HOOK1:-""}
+HOOK2=${HOOK2:-""}
+HOOK3=${HOOK3:-""}
+
 # Some sane defaults
 cd ${BASEDIR}
 umask 022
