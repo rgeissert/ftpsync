@@ -133,8 +133,8 @@ error () {
 # needs array variable HOOK setup with HOOKNR being a number an HOOKSCR
 # the script to run.
 hook () {
-	ARGS="HOOK[*]"
-	local ${!ARGS}
+	ARGS='HOOK[@]'
+	local "${!ARGS}"
 	if [ -n "${HOOKSCR}" ]; then
 		log "Running hook $HOOKNR: ${HOOKSCR}"
 		set +e
