@@ -437,7 +437,7 @@ while [ -e "${UPDATEREQUIRED}" ]; do
 done
 
 if [ -d "`dirname "${TO}/${TRACE}"`" ]; then
-      date -u > "${TO}/${TRACE}"
+      LC_ALL=POSIX LANG=POSIX date -u > "${TO}/${TRACE}"
       echo "Used ftpsync version: ${VERSION}" >> "${TO}/${TRACE}"
 	  echo "Running on host: $(hostname -f)" >> "${TO}/${TRACE}"
 fi
