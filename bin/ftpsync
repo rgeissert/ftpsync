@@ -106,7 +106,7 @@ cleanup() {
 		if [ "x${ERRORSONLY}x" = "xfalsex" ]; then
 			# And the normal log
 			MAILFILES="${LOG}"
-			if [ "x${FULLLOG}x" = "xtruex" ]; then
+			if [ "x${FULLLOGS}x" = "xtruex" ]; then
 				# Someone wants full logs including rsync
 				MAILFILES="${MAILFILES} ${LOGDIR}/rsync-${NAME}.log"
 			fi
