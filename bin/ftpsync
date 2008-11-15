@@ -369,24 +369,27 @@ export RSYNC_PROXY
 
 while [ -e "${UPDATEREQUIRED}" ]; do
 	log "Running mirrorsync, update is required, ${UPDATEREQUIRED} exists"
-	rm -f "${UPDATEREQUIRED}"
 
 	# if we want stage1 *or* all
 	if [ "xtruex" = "x${SYNCSTAGE1}x" ] || [ "xtruex" = "x${SYNCALL}x" ]; then
-		log "Running stage1: ${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS1} ${EXCLUDE} ${SOURCE_EXCLUDE}  ${RSYNCPTH}::${RSYNC_PATH} ${TO}"
+		while [ -e "${UPDATEREQUIRED}" ]; do
+			rm -f "${UPDATEREQUIRED}"
+			log "Running stage1: ${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS1} ${EXCLUDE} ${SOURCE_EXCLUDE}  ${RSYNCPTH}::${RSYNC_PATH} ${TO}"
 
-		set +e
-		# Step one, sync everything except Packages/Releases
-		${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS1} ${EXCLUDE} ${SOURCE_EXCLUDE} \
-			${RSYNCPTH}::${RSYNC_PATH} "${TO}" >"${LOGDIR}/rsync-${NAME}.log" 2>"${LOGDIR}/rsync-${NAME}.error"
-		result=$?
-		set -e
+			set +e
+			# Step one, sync everything except Packages/Releases
+			${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS1} ${EXCLUDE} ${SOURCE_EXCLUDE} \
+				${RSYNCPTH}::${RSYNC_PATH} "${TO}" >"${LOGDIR}/rsync-${NAME}.log" 2>"${LOGDIR}/rsync-${NAME}.error"
+			result=$?
+			set -e
 
-		log "Back from rsync with returncode ${result}"
+			log "Back from rsync with returncode ${result}"
+		done
 	else
 		# Fake a good resultcode
 		result=0
 	fi # Sync stage 1?
+	rm -f "${UPDATEREQUIRED}"
 
 	check_rsync $result "Sync step 1 went wrong, got errorcode ${result}. Logfile: ${LOG}" || exit 3
 
