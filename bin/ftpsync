@@ -245,8 +245,11 @@ TRACE=${TRACE:-"project/trace/${MIRRORNAME}"}
 
 # rsync program
 RSYNC=${RSYNC:-rsync}
+# Rsync filter rules. Used to protect various files we always want to keep, even if we otherwise delete
+# excluded files
+RSYNC_FILTER=${RSYNC_FILTER:-"--filter=protect_Archive-Update-in-Progress-${MIRRORNAME} --filter=protect_${TRACE} --filter=protect_Archive-Update-Required-${MIRRORNAME}"}
 # Default rsync options for *every* rsync call
-RSYNC_OPTIONS=${RSYNC_OPTIONS:-"-rltvHSB8192 --timeout 3600 --stats --exclude Archive-Update-in-Progress-${MIRRORNAME} --exclude ${TRACE} --exclude Archive-Update-Required-${MIRRORNAME}"}
+RSYNC_OPTIONS=${RSYNC_OPTIONS:-"-rltvHSB8192 --timeout 3600 --stats ${RSYNC_FILTER}"}
 # Options we only use in the first pass, where we do not want packages/sources to fly in yet and dont want to delete files
 RSYNC_OPTIONS1=${RSYNC_OPTIONS1:-"--exclude Packages* --exclude Sources* --exclude Release* --exclude ls-lR*"}
 # Options for the second pass, where we do want everything, including deletion of old and now unused files
