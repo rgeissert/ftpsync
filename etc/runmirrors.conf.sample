@@ -1,14 +1,46 @@
-HOME=~archvsync
-LOGNAME="archvsync"
-USER="archvsync"
-MAIL=
-PATH="/bin:/usr/bin:$HOME"
-KEYFILE=.ssh/pushmirror
-# Hook scripts can be run at various places.
-# Leave them blank if you don't want any
-# Hook1: After reading config, before doing the first real action
-# Hook2: Between two hosts to push
-# Hook3: When everything is done
-HOOK1=
-HOOK2=
-HOOK3=
+########################################################################
+########################################################################
+## This is a sample configuration file for the runmirror script.      ##
+## Most of the values are commented out and just shown here for       ##
+## completeness, together with their default value.                   ##
+########################################################################
+########################################################################
+
+## Which ssh key to use?
+#KEYFILE=.ssh/pushmirror
+
+## The directory for our logfiles
+#LOGDIR="${BASEDIR}/log"
+
+## Our own logfile
+#LOG="${LOGDIR}/${NAME}.log"
+
+## Our lockfile directory
+#LOCKDIR="${BASEDIR}/locks"
+
+## How to rotate the log
+#SAVELOG="savelog -t -c 14"
+
+## Our mirrorfile
+#MIRRORS="${BASEDIR}/etc/${NAME}.mirror"
+
+## extra ssh options we might want. *hostwide*
+#SSH_OPTS=""
+
+## Whats our archive name? We will also tell our leafs about it
+## This is usually empty, but if we are called as "runmirrors bpo"
+## it will default to bpo. This way one runmirrors script can serve
+## multiple archives, similar to what ftpsync does.
+#PUSHARCHIVE="${CONF}"
+
+## How long to wait for mirrors to do stage1 if we have multi-stage syncing
+#PUSHDELAY=240
+
+## Hook scripts can be run at various places.
+## Leave them blank/commented out if you don't want any
+## Hook1: After reading config, before doing the first real action
+## Hook2: Between two hosts to push
+## Hook3: When everything is done
+#HOOK1=""
+#HOOK2=""
+#HOOK3=""

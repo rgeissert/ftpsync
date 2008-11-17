@@ -37,9 +37,6 @@ fi
 # Read our config file
 . "${BASEDIR}/etc/${NAME}.conf"
 
-# Make sure some variables are always in the environment
-export HOME LOGNAME USER PATH BASEDIR
-
 # Source our common functions
 . "${BASEDIR}/etc/common"
 
@@ -62,6 +59,13 @@ SSH_OPTS=${SSH_OPTS:-""}
 PUSHARCHIVE=${PUSHARCHIVE:-"${CONF}"}
 # How long to wait for mirrors to do stage1 if we have multi-stage syncing
 PUSHDELAY=${PUSHDELAY:-240}
+# Which ssh key to use?
+KEYFILE=${KEYFILE:-".ssh/pushmirror"}
+
+if ! [ -f "${KEYFILE}" ]; then
+	error "SSH Key ${KEYFILE} does not exist" >> ${LOG}
+	exit 5
+fi
 
 # Hooks
 HOOK1=${HOOK1:-""}
