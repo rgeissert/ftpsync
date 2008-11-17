@@ -132,6 +132,8 @@ check_rsync() {
 	case "${ret}" in
 		0) return 0;;
 		24) return 0;;
+		23) return 2;;
+		30) return 2;;
 		*)
 			error "ERROR: ${msg}"
 			return 1
@@ -391,7 +393,15 @@ while [ -e "${UPDATEREQUIRED}" ]; do
 	fi # Sync stage 1?
 	rm -f "${UPDATEREQUIRED}"
 
-	check_rsync $result "Sync step 1 went wrong, got errorcode ${result}. Logfile: ${LOG}" || exit 3
+	set +e
+	check_rsync $result "Sync step 1 went wrong, got errorcode ${result}. Logfile: ${LOG}"
+	GO=$?
+	set -e
+	if [ ${GO} -eq 2 ] && [ -e "${UPDATEREQUIRED}" ]; then
+		log "We got error ${result} from rsync, but a second push went in hence ignoring this error for now"
+	elif [ ${GO} -ne 0 ]; then
+		 exit 3
+	fi
 
 	HOOK=(
 		HOOKNR=2
@@ -417,7 +427,15 @@ while [ -e "${UPDATEREQUIRED}" ]; do
 		result=0
 	fi # Sync stage 2?
 
-	check_rsync $result "Sync step 2 went wrong, got errorcode ${result}. Logfile: ${LOG}" || exit 4
+	set +e
+	check_rsync $result "Sync step 2 went wrong, got errorcode ${result}. Logfile: ${LOG}"
+	GO=$?
+	set -e
+	if [ ${GO} -eq 2 ] && [ -e "${UPDATEREQUIRED}" ]; then
+		log "We got error ${result} from rsync, but a second push went in hence ignoring this error for now"
+	elif [ ${GO} -ne 0 ]; then
+		 exit 4
+	fi
 
 	HOOK=(
 		HOOKNR=3
