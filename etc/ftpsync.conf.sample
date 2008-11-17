@@ -76,6 +76,9 @@
 #SAVELOG="savelog -t -c 14"
 
 ## We need to deal with lockfiles
+## If this is not set *AND* lockfile (from procmail package) is not found, we fall
+## back to a method using find. That is less safe, but still works, in case you don't
+## want to install procmail.
 #LOCKFILE="lockfile"
 
 ## Our own lockfile (only one sync should run at any time)
