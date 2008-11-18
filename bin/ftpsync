@@ -235,8 +235,6 @@ FULLLOGS=${FULLLOGS:-"false"}
 
 # How to rotate our log
 SAVELOG=${SAVELOG:-"savelog -t -c 14"}
-# Lockfile program
-LOCKFILE=${LOCKFILE:-"lockfile"}
 
 # Our lockfile
 LOCK=${LOCK:-"${TO}/Archive-Update-in-Progress-${MIRRORNAME}"}
@@ -327,19 +325,11 @@ mkdir -p "${TO}/project/trace"
 touch "${UPDATEREQUIRED}"
 
 # Check to see if another sync is in progress
-if [ -x "${LOCKFILE}" ]; then
-	if ${LOCKFILE} -! -l 43200 -r 0 "${LOCK}"; then
-        error "Unable to start rsync, lock file still exists"
+if ! ( set -o noclobber; echo "$$" > "${LOCK}") 2> /dev/null; then
+        error "Unable to start rsync, lock file still exists, PID $(cat ${LOCK})"
         exit 1
-	fi
-else
-	if [ "`find ${LOCK} -maxdepth 1 -cmin -720`" != "" ]; then
-        error "Unable to start rsync, lock file still exists"
-        exit 1
-	else
-		touch "${LOCK}"
-	fi
 fi
+
 trap cleanup EXIT ERR TERM HUP INT QUIT
 
 # Start log by redirecting everything there.
