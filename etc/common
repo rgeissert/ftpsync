@@ -158,3 +158,17 @@ get2stage() {
 	}
 }
 
+# Rotate logfiles
+savelog() {
+    torotate="$1"
+	count=${2:-"${LOGROTATE}"}
+	echo "Rotation $torotate a $count times"
+	while [ ${count} -gt 0 ]; do
+		prev=$(( count - 1 ))
+		if [ -e "${torotate}.${prev}" ]; then
+			mv "${torotate}.${prev}" "${torotate}.${count}"
+		fi
+		count=$prev
+	done
+	mv "${torotate}" "${torotate}.0"
+}

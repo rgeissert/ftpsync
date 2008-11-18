@@ -72,8 +72,8 @@
 #HUB=false
 
 ## We do create three logfiles for every run. To save space we rotate them, this
-## defines how.
-#SAVELOG="savelog -t -c 14"
+## defines how many we keep
+#LOGROTATE=14
 
 ## Our own lockfile (only one sync should run at any time)
 #LOCK="${TO}/Archive-Update-in-Progress-${MIRRORNAME}"

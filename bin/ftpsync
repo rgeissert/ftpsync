@@ -32,7 +32,7 @@ BASEDIR=${BASEDIR:-"${HOME}"}
 # Script version. DO NOT CHANGE, *unless* you change the master copy maintained
 # by Joerg Jaspert and the Debian mirroradm group.
 # This is used to track which mirror is using which script version.
-VERSION="23"
+VERSION="0815"
 
 # Source our common functions
 . "${BASEDIR}/etc/common"
@@ -114,9 +114,9 @@ cleanup() {
 		fi
 	fi
 
-	${SAVELOG} "${LOGDIR}/rsync-${NAME}.log"
-	${SAVELOG} "${LOGDIR}/rsync-${NAME}.error"
-	${SAVELOG} "$LOG" > /dev/null
+	savelog "${LOGDIR}/rsync-${NAME}.log"
+	savelog "${LOGDIR}/rsync-${NAME}.error"
+	savelog "$LOG" > /dev/null
 
 	rm -f "${LOCK}"
 }
@@ -233,8 +233,8 @@ ERRORSONLY=${ERRORSONLY:-"true"}
 # Want full logs, ie. including the rsync one?
 FULLLOGS=${FULLLOGS:-"false"}
 
-# How to rotate our log
-SAVELOG=${SAVELOG:-"savelog -t -c 14"}
+# How many logfiles to keep
+LOGROTATE=${LOGROTATE:14}
 
 # Our lockfile
 LOCK=${LOCK:-"${TO}/Archive-Update-in-Progress-${MIRRORNAME}"}

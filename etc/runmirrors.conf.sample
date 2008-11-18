@@ -18,8 +18,9 @@
 ## Our lockfile directory
 #LOCKDIR="${BASEDIR}/locks"
 
-## How to rotate the log
-#SAVELOG="savelog -t -c 14"
+## We do create a logfile for every run. To save space we rotate it, this
+## defines how many we keep
+#LOGROTATE=14
 
 ## Our mirrorfile
 #MIRRORS="${BASEDIR}/etc/${NAME}.mirror"
