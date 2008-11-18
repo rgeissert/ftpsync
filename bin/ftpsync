@@ -326,8 +326,13 @@ touch "${UPDATEREQUIRED}"
 
 # Check to see if another sync is in progress
 if ! ( set -o noclobber; echo "$$" > "${LOCK}") 2> /dev/null; then
-        error "Unable to start rsync, lock file still exists, PID $(cat ${LOCK})"
-        exit 1
+	if ! $(kill -0 $(cat ${LOCK}) 2>/dev/null); then
+		# Process does either not exist or is not owned by us.
+		echo "$$" > "${LOCK}"
+	else
+		echo "Unable to start rsync, lock file still exists, PID $(cat ${LOCK})"
+		exit 1
+	fi
 fi
 
 trap cleanup EXIT ERR TERM HUP INT QUIT
