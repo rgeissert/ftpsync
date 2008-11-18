@@ -48,7 +48,7 @@ LOG=${LOG:-"${LOGDIR}/${NAME}.log"}
 # Our lockfile directory
 LOCKDIR=${LOCKDIR:-"${BASEDIR}/locks"}
 # How many logfiles to keep
-LOGROTATE=${LOGROTATE:14}
+LOGROTATE=${LOGROTATE:-14}
 # Our mirrorfile
 MIRRORS=${MIRRORS:-"${BASEDIR}/etc/${NAME}.mirror"}
 # used by log()

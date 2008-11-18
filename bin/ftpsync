@@ -234,7 +234,7 @@ ERRORSONLY=${ERRORSONLY:-"true"}
 FULLLOGS=${FULLLOGS:-"false"}
 
 # How many logfiles to keep
-LOGROTATE=${LOGROTATE:14}
+LOGROTATE=${LOGROTATE:-14}
 
 # Our lockfile
 LOCK=${LOCK:-"${TO}/Archive-Update-in-Progress-${MIRRORNAME}"}
