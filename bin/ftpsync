@@ -333,7 +333,7 @@ if [ -x "${LOCKFILE}" ]; then
         exit 1
 	fi
 else
-	if [ "`find ${LOCK} -maxdepth 1 -cmin -720`" != ""]; then
+	if [ "`find ${LOCK} -maxdepth 1 -cmin -720`" != "" ]; then
         error "Unable to start rsync, lock file still exists"
         exit 1
 	else
