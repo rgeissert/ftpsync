@@ -28,6 +28,11 @@
 ## extra ssh options we might want. *hostwide*
 #SSH_OPTS=""
 
+## The script can send logs (or error messages) to a mail address.
+## If this is unset it will default to the local root user unless it is run
+## on a .debian.org machine where it will default to the mirroradm people.
+#MAILTO="root"
+
 ## Whats our archive name? We will also tell our leafs about it
 ## This is usually empty, but if we are called as "runmirrors bpo"
 ## it will default to bpo. This way one runmirrors script can serve
