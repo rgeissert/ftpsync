@@ -102,8 +102,9 @@ while read MLNAME MHOSTNAME MUSER MPROTO MKEYFILE; do
 	log "Pushing ${MLNAME}" >> ${LOG}
 	# This needs a limited ssh key on the other side, something like
 	# no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty,command="rsync --server -vlogDtpr . /srv/mirrors/packages.debian.org/",from="87.106.64.223,2001:8d8:80:11::35d,powell.debian.org" ssh-rsa.....
-	rsync -e "ssh -i ${MKEYFILE} -${MPROTO}" -av --progress --stats  ${MIRRORPATH}  ${MUSER}@${MHOSTNAME}:/does/not/matter
+	rsync -e "ssh -i ${MKEYFILE} -${MPROTO}" -av --progress --stats  ${MIRRORPATH}  ${MUSER}@${MHOSTNAME}:/does/not/matter > ${LOGDIR}/${MLNAME}.log
 	log "Pushing ${MLNAME} done" >> ${LOG}
+	savelog ${LOGDIR}${MLNAME}.log
 
 	set +e
 done
