@@ -70,7 +70,6 @@ umask 022
 
 # Make sure we have our log and lock directories
 mkdir -p "${LOGDIR}"
-mkdir -p "${LOCKDIR}"
 
 trap 'log "Pdopush done" >> ${LOG}; savelog "${LOG}" > /dev/null' EXIT
 
