@@ -40,7 +40,7 @@
 #PUSHARCHIVE="${CONF}"
 
 ## How long to wait for mirrors to do stage1 if we have multi-stage syncing
-#PUSHDELAY=240
+#PUSHDELAY=600
 
 ## Hook scripts can be run at various places.
 ## Leave them blank/commented out if you don't want any

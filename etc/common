@@ -25,150 +25,165 @@
 #
 # Pushes might be done in background (for type all).
 signal () {
-	ARGS="SIGNAL_OPTS[*]"
-	local ${!ARGS}
+    ARGS="SIGNAL_OPTS[*]"
+    local ${!ARGS}
 
-	MIRROR=${MIRROR:-""}
-	HOSTNAME=${HOSTNAME:-""}
-	USERNAME=${USERNAME:-""}
-	SSHPROTO=${SSHPROTO:-""}
-	SSHKEY=${SSHKEY:-""}
-	SSHOPTS=${SSHOPTS:-""}
-	PUSHLOCKOWN=${PUSHLOCKOWN:-""}
-	PUSHTYPE=${PUSHTYPE:-"all"}
-	PUSHARCHIVE=${PUSHARCHIVE:-""}
-	PUSHCB=${PUSHCB:-""}
+    MIRROR=${MIRROR:-""}
+    HOSTNAME=${HOSTNAME:-""}
+    USERNAME=${USERNAME:-""}
+    SSHPROTO=${SSHPROTO:-""}
+    SSHKEY=${SSHKEY:-""}
+    SSHOPTS=${SSHOPTS:-""}
+    PUSHLOCKOWN=${PUSHLOCKOWN:-""}
+    PUSHTYPE=${PUSHTYPE:-"all"}
+    PUSHARCHIVE=${PUSHARCHIVE:-""}
+    PUSHCB=${PUSHCB:-""}
 
-	# Defaults we always want, no matter what
-	SSH_OPTIONS="-o BatchMode=yes -o SetupTimeOut=45 -o ConnectTimeout=45 -o PasswordAuthentication=no"
+    # Defaults we always want, no matter what
+    SSH_OPTIONS="-o BatchMode=yes -o SetupTimeOut=45 -o ConnectTimeout=45 -o PasswordAuthentication=no"
 
-	if [ -n "${SSH_OPTS}" ]; then
-		SSH_OPTIONS="${SSH_OPTIONS} ${SSH_OPTS}"
-	fi
+    if [ -n "${SSH_OPTS}" ]; then
+        SSH_OPTIONS="${SSH_OPTIONS} ${SSH_OPTS}"
+    fi
 
-	if [ ${SSHPROTO} -ne 1 ] && [ ${SSHPROTO} -ne 2 ]; then
-		# Idiots, we only want 1 or 2. Cant decide? Lets force 2
-		${SSHPROTO}=2
-	fi
+    if [ ${SSHPROTO} -ne 1 ] && [ ${SSHPROTO} -ne 2 ]; then
+        # Idiots, we only want 1 or 2. Cant decide? Lets force 2
+        ${SSHPROTO}=2
+    fi
 
-	date -u >> "${LOGDIR}/${MIRROR}.log"
+    date -u >> "${LOGDIR}/${MIRROR}.log"
 
-	PUSHARGS=""
-	if [ -n "${PUSHARCHIVE}" ]; then
-		PUSHARGS="${PUSHARGS} sync:archive:${PUSHARCHIVE}"
-	fi
-	if [ -n "${PUSHCB}" ]; then
-		PUSHARGS="${PUSHARGS} sync:callback"
-	fi
+    PUSHARGS=""
+    if [ -n "${PUSHARCHIVE}" ]; then
+        PUSHARGS="${PUSHARGS} sync:archive:${PUSHARCHIVE}"
+    fi
+    if [ -n "${PUSHCB}" ]; then
+        PUSHARGS="${PUSHARGS} sync:callback"
+    fi
 
-	if [ "xallx" = "x${PUSHTYPE}x" ]; then
-		# Default normal "fire and forget" push
-		PUSHARGS1="sync:all"
-		ssh $SSH_OPTIONS -i "${SSHKEY}" -o"user ${USERNAME}" -${SSHPROTO} "${HOSTNAME}" "${PUSHARGS} ${PUSHARGS1}" >>"${LOGDIR}/${MIRROR}.log" 2>&1 &
-	elif [ "xstagedx" = "x${PUSHTYPE}x" ]; then
-		# Want a staged push. Fine, lets do that
+    if [ "xallx" = "x${PUSHTYPE}x" ]; then
+        # Default normal "fire and forget" push
+        echo "Sending normal push" >> "${LOGDIR}/${MIRROR}.log"
+        PUSHARGS1="sync:all"
+        ssh $SSH_OPTIONS -i "${SSHKEY}" -o"user ${USERNAME}" -${SSHPROTO} "${HOSTNAME}" "${PUSHARGS} ${PUSHARGS1}" >>"${LOGDIR}/${MIRROR}.log" 2>&1 &
+    elif [ "xstagedx" = "x${PUSHTYPE}x" ]; then
+        # Want a staged push. Fine, lets do that
+        echo "Sending staged push" >> "${LOGDIR}/${MIRROR}.log"
 
-		# Step1: Do a push to only sync stage1, do not background
-		PUSHARGS1="sync:stage1"
-		ssh $SSH_OPTIONS -i "${SSHKEY}" -o"user ${USERNAME}" -${SSHPROTO} "${HOSTNAME}" "${PUSHARGS} ${PUSHARGS1}" >>"${LOGDIR}/${MIRROR}.log" 2>&1
-		touch "${PUSHLOCKOWN}"
+        # Step1: Do a push to only sync stage1, do not background
+        PUSHARGS1="sync:stage1"
+        ssh $SSH_OPTIONS -i "${SSHKEY}" -o"user ${USERNAME}" -${SSHPROTO} "${HOSTNAME}" "${PUSHARGS} ${PUSHARGS1}" >>"${LOGDIR}/${MIRROR}.log" 2>&1
+        touch "${PUSHLOCKOWN}"
 
-		# Step2: Wait for all the other "lock"files to appear.
-		tries=0
-		# We do not wait forever
-		while [ ${tries} -lt ${PUSHDELAY} ]; do
-			total=0
-			found=0
-			for file in ${PUSHLOCKS}; do
-				total=$((total + 1))
-				if [ -f ${file} ]; then
-					found=$((found + 1))
-				fi
-			done
-			if [ ${total} -eq ${found} ] || [ -f "${LOCKDIR}/all_stage1" ]; then
-				touch "${LOCKDIR}/all_stage1"
-				break
-			fi
-			sleep 5
-		done
-		rm -f "${PUSHLOCKOWN}"
+        # Step2: Wait for all the other "lock"files to appear.
+        tries=0
+        # We do not wait forever
+        while [ ${tries} -lt ${PUSHDELAY} ]; do
+            total=0
+            found=0
+            for file in ${PUSHLOCKS}; do
+                total=$((total + 1))
+                if [ -f ${file} ]; then
+                    found=$((found + 1))
+                fi
+            done
+            if [ ${total} -eq ${found} ] || [ -f "${LOCKDIR}/all_stage1" ]; then
+                touch "${LOCKDIR}/all_stage1"
+                break
+            fi
+            tries=$((tries + 5))
+            sleep 5
+        done
+        # In case we did not have all PUSHLOCKS and still continued, note it
+        # This is a little racy, especially if the other parts decide to do this
+        # at the same time, but it wont hurt more than a mail too much, so I don't care much
+        if [ ${tries} -ge ${PUSHDELAY} ]; then
+        echo "Failed to wait for all other mirrors. Failed ones are:" >> "${LOGDIR}/${MIRROR}.log"
+            for file in ${PUSHLOCKS}; do
+                if [ ! -f ${file} ]; then
+                    echo "${file}" >> "${LOGDIR}/${MIRROR}.log"
+                    error "Missing Pushlockfile ${file} after waiting ${tries} second, continuing"
+                fi
+            done
+        fi
+        rm -f "${PUSHLOCKOWN}"
 
-		# Step3: It either timed out or we have all the "lock"files, sync stage2
-		PUSHARGS2="sync:stage2"
-		ssh $SSH_OPTIONS -i "${SSHKEY}" -o"user ${USERNAME}" -${SSHPROTO} "${HOSTNAME}" "${PUSHARGS} ${PUSHARGS2}" >>"${LOGDIR}/${MIRROR}.log" 2>&1
-	else
-		# Can't decide? Then you get nothing.
-		return
-	fi
-
+        # Step3: It either timed out or we have all the "lock"files, sync stage2
+        PUSHARGS2="sync:stage2"
+        echo "Now doing the second stage push" >> "${LOGDIR}/${MIRROR}.log"
+        ssh $SSH_OPTIONS -i "${SSHKEY}" -o"user ${USERNAME}" -${SSHPROTO} "${HOSTNAME}" "${PUSHARGS} ${PUSHARGS2}" >>"${LOGDIR}/${MIRROR}.log" 2>&1
+    else
+        # Can't decide? Then you get nothing.
+        return
+    fi
 }
 
 # callback, used by ftpsync
 callback () {
-	# Defaults we always want, no matter what
-	SSH_OPTIONS="-o BatchMode=yes -o SetupTimeOut=45 -o ConnectTimeout=45 -o PasswordAuthentication=no"
-	ssh $SSH_OPTIONS -i "$3" -o"user $1" "$2" callback:${HOSTNAME}
+    # Defaults we always want, no matter what
+    SSH_OPTIONS="-o BatchMode=yes -o SetupTimeOut=45 -o ConnectTimeout=45 -o PasswordAuthentication=no"
+    ssh $SSH_OPTIONS -i "$3" -o"user $1" "$2" callback:${HOSTNAME}
 }
 
 # log something (basically echo it together with a timestamp)
 #
 # Set $PROGRAM to a string to have it added to the output.
 log () {
-	if [ -z "${PROGRAM}" ]; then
-		echo "$(date +"%b %d %H:%M:%S") $(hostname -s) [$$] $@"
-	else
-		echo "$(date +"%b %d %H:%M:%S") $(hostname -s) ${PROGRAM}[$$]: $@"
-	fi
+    if [ -z "${PROGRAM}" ]; then
+        echo "$(date +"%b %d %H:%M:%S") $(hostname -s) [$$] $@"
+    else
+        echo "$(date +"%b %d %H:%M:%S") $(hostname -s) ${PROGRAM}[$$]: $@"
+    fi
 }
 
 # log the message using log() but then also send a mail
 # to the address configured in MAILTO (if non-empty)
 error () {
-	log "$@"
-	if [ -z "${MAILTO}" ]; then
-		echo "$@" | mail -e -s "[$PROGRAM@$(hostname -s)] ERROR [$$]" ${MAILTO}
-	fi
+    log "$@"
+    if [ -z "${MAILTO}" ]; then
+        echo "$@" | mail -e -s "[$PROGRAM@$(hostname -s)] ERROR [$$]" ${MAILTO}
+    fi
 }
 
 # run a hook
 # needs array variable HOOK setup with HOOKNR being a number an HOOKSCR
 # the script to run.
 hook () {
-	ARGS='HOOK[@]'
-	local "${!ARGS}"
-	if [ -n "${HOOKSCR}" ]; then
-		log "Running hook $HOOKNR: ${HOOKSCR}"
-		set +e
-		${HOOKSCR}
-		result=$?
-		set -e
-		log "Back from hook $HOOKNR, got returncode ${result}"
-		return $result
-	else
-		return 0
-	fi
+    ARGS='HOOK[@]'
+    local "${!ARGS}"
+    if [ -n "${HOOKSCR}" ]; then
+        log "Running hook $HOOKNR: ${HOOKSCR}"
+        set +e
+        ${HOOKSCR}
+        result=$?
+        set -e
+        log "Back from hook $HOOKNR, got returncode ${result}"
+        return $result
+    else
+        return 0
+    fi
 }
 
 # Return the list of 2-stage mirrors.
 get2stage() {
-	egrep '^staged' "${MIRRORS}" | {
-		while read MTYPE MLNAME MHOSTNAME MUSER MPROTO MKEYFILE; do
-			PUSHLOCKS="${LOCKDIR}/${MLNAME}.stage1 ${PUSHLOCKS}"
-		done
-		echo "$PUSHLOCKS"
-	}
+    egrep '^staged' "${MIRRORS}" | {
+        while read MTYPE MLNAME MHOSTNAME MUSER MPROTO MKEYFILE; do
+            PUSHLOCKS="${LOCKDIR}/${MLNAME}.stage1 ${PUSHLOCKS}"
+        done
+        echo "$PUSHLOCKS"
+    }
 }
 
 # Rotate logfiles
 savelog() {
     torotate="$1"
-	count=${2:-${LOGROTATE}}
-	while [ ${count} -gt 0 ]; do
-		prev=$(( count - 1 ))
-		if [ -e "${torotate}.${prev}" ]; then
-			mv "${torotate}.${prev}" "${torotate}.${count}"
-		fi
-		count=$prev
-	done
-	mv "${torotate}" "${torotate}.0"
+    count=${2:-${LOGROTATE}}
+    while [ ${count} -gt 0 ]; do
+        prev=$(( count - 1 ))
+        if [ -e "${torotate}.${prev}" ]; then
+            mv "${torotate}.${prev}" "${torotate}.${count}"
+        fi
+        count=$prev
+    done
+    mv "${torotate}" "${torotate}.0"
 }
