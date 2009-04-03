@@ -289,7 +289,7 @@ SOURCE_EXCLUDE=${SOURCE_EXCLUDE:-""}
 ARCH_EXCLUDE=${ARCH_EXCLUDE:-""}
 # Exclude architectures defined in $ARCH_EXCLUDE
 for ARCH in ${ARCH_EXCLUDE}; do
-    EXCLUDE="${EXCLUDE} --exclude binary-${ARCH}/ --exclude disks-${ARCH}/ --exclude installer-${ARCH}/ --exclude Contents-${ARCH}.gz --exclude Contents-${ARCH}.bz2 --exclude Contents-${ARCH}.diff/ --exclude arch-${ARCH}.files --exclude arch-${ARCH}.list.gz --exclude *_${ARCH}.deb --exclude *_${ARCH}.udeb "
+    EXCLUDE="${EXCLUDE} --exclude binary-${ARCH}/ --exclude disks-${ARCH}/ --exclude installer-${ARCH}/ --exclude Contents-${ARCH}.gz --exclude Contents-${ARCH}.bz2 --exclude Contents-${ARCH}.diff/ --exclude arch-${ARCH}.files --exclude arch-${ARCH}.list.gz --exclude *_${ARCH}.deb --exclude *_${ARCH}.udeb --exclude *_${ARCH}.changes"
     if [ "${ARCH}" = "source" ]; then
 		if [ -z ${SOURCE_EXCLUDE} ]; then
 			SOURCE_EXCLUDE=" --exclude source/ --exclude *.tar.gz --exclude *.diff.gz --exclude *.tar.bz2 --exclude *.diff.bz2 --exclude *.dsc "
