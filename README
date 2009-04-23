@@ -37,7 +37,10 @@ no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty,command="~/bin/f
 In order to receive different pushes or syncs from different archives,
 name the config file ftpsync-$ARCHIVE.conf and call the ftpsync script
 with the commandline "sync:archive:$ARCHIVE". Replace $ARCHIVE with a
-sensible value.
+sensible value. If your upstream mirror pushes you using runmirrors
+bundled together with this sync script, you do not need to add the
+"sync:archive" parameter to the commandline, the scripts deal with it
+automatically.
 
 
 
