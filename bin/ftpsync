@@ -148,7 +148,11 @@ check_rsync() {
 # As what are we called?
 NAME="`basename $0`"
 # The original command line arguments need to be saved!
-ORIGINAL_COMMAND="$*"
+if [ $# -gt 0 ]; then
+    ORIGINAL_COMMAND=$*
+else
+    ORIGINAL_COMMAND=""
+fi
 
 SSH_ORIGINAL_COMMAND=${SSH_ORIGINAL_COMMAND:-""}
 # Now, check if we got told about stuff via ssh
