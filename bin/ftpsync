@@ -342,7 +342,7 @@ fi
 trap cleanup EXIT ERR TERM HUP INT QUIT
 
 # Start log by redirecting everything there.
-exec >"$LOG" 2>&1
+exec >"$LOG" 2>&1 </dev/null
 
 # Look who pushed us and note that in the log.
 log "Mirrorsync start"
