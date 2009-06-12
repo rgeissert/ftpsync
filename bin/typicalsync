@@ -19,7 +19,7 @@ use POSIX qw(strftime);
 
 # configuration:
 
-my $local_dir  = "/srv/ftp.debian.org/ftp";
+my $local_dir  = "/srv/ftp.debian.org/mirror";
 my $rsync_host = undef; #"merkel.debian.org";
 my $rsync_dir  = undef; #"debian";
 
