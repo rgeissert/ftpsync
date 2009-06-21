@@ -54,7 +54,7 @@
 ## See rsync(1) for the exact syntax, these are passed to rsync as written here.
 ## Please do not use this except for rare cases and after you talked to us.
 ## For the sponsor logos see SITE_EXCLUDE
-#EXCLUDE=${EXCLUDE:-"${HOSTNAME}"}
+#EXCLUDE=${EXCLUDE:-"--exclude ${HOSTNAME}"}
 
 ## And site specific excludes, by default its the sponsor stuff that should be local to all
 #SITE_EXCLUDE=${SITE_EXCLUDE:-"--exclude core --exclude sponsor_img.jpg --exclude sponsor.html"}

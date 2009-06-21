@@ -168,7 +168,7 @@ RSYNC_PASSWORD=${RSYNC_PASSWORD:-""}
 RSYNC_PROXY=${RSYNC_PROXY:-""}
 
 # General excludes.
-EXCLUDE=${EXCLUDE:-"${HOSTNAME}"}
+EXCLUDE=${EXCLUDE:-"--exclude ${HOSTNAME}"}
 
 # The temp directory used by rsync --delay-updates is not
 # world-readable remotely. Always exclude it to avoid errors.
