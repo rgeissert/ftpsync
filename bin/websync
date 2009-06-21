@@ -249,10 +249,10 @@ while [ -e "${UPDATEREQUIRED}" ]; do
 	log "Running mirrorsync, update is required, ${UPDATEREQUIRED} exists"
 
 	rm -f "${UPDATEREQUIRED}"
-	log "Syncing: ${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS2} ${EXCLUDE} ${SOURCE_EXCLUDE}  ${RSYNCPTH}::${RSYNC_PATH} ${TO}"
+	log "Syncing: ${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS2} ${EXCLUDE} ${SITE_EXCLUDE}  ${RSYNCPTH}::${RSYNC_PATH} ${TO}"
 
 	set +e
-	${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS2} ${EXCLUDE} ${SOURCE_EXCLUDE} \
+	${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS2} ${EXCLUDE} ${SITE_EXCLUDE} \
 		${RSYNCPTH}::${RSYNC_PATH} "${TO}" >"${LOGDIR}/rsync-${NAME}.log" 2>"${LOGDIR}/rsync-${NAME}.error"
 	result=$?
 	set -e
