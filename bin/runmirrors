@@ -112,7 +112,7 @@ rm -f "${LOCKDIR}/all_stage1"
 # Now read our mirrorfile and push the mirrors defined in there.
 # We use grep to easily sort out all lines having a # in front of them or are empty.
 egrep -v '^[[:space:]]*(#|$)' "${MIRRORS}" |
-while read MTYPE MLNAME MHOSTNAME MUSER MPROTO MKEYFILE; do
+while read MTYPE MLNAME MHOSTNAME MUSER MSSHOPT; do
 	if [ "x${MTYPE}x" = "xDELAYx" ]; then
 		# We should wait a bit.
 		if [ -z ${MLNAME} ]; then
@@ -123,19 +123,43 @@ while read MTYPE MLNAME MHOSTNAME MUSER MPROTO MKEYFILE; do
 		continue
 	fi
 
-	# Process the two options that can be left blank in the config
-	if [ -z ${MPROTO} ]; then
-		MPROTO=2
-	fi
-	if [ -z ${MKEYFILE} ]; then
+    # Now, MSSHOPT may start with a -. In that case the whole rest of the line is taken
+    # as a set of options to give to ssh, we pass it without doing anything with it.
+    # If it starts with a 1 or 2 then it will tell us about the ssh protocol version to use,
+    # and also means we look if there is one value more after a space. That value would then
+    # be the ssh keyfile we use with -i. That gives us full flexibility for all
+    # ssh options but doesn't destroy backwards compatibility.
+    # If it is empty we assume proto 2 and the default keyfile.
+    #
+    # There is one bug in here. We will give out the master keyfile, even if there is a
+    # "-i /bla/bla" in the options. ssh stuffs them together and presents two keys to the
+    # target server. In the case both keys do some actions- the first one presented wins.
+    # And this might not be what one wants.
+    #
+    # The only sane way to go around this, i think, is by dropping backward compability.
+    # Which I don't really like.
+    if [ -n "${MSSHOPT}" ]; then
+        # So its not empty, lets check if it starts with a - and as such is a "new-style"
+        # ssh options set.
+        if [ "x${MSSHOPT:0:1}x" = "x-x" ]; then
+            # Yes we start with a -
+            SSHOPT="${MSSHOPT}"
+            MPROTO="99"
+            MKEYFILE="${BASEDIR}/${KEYFILE}"
+        elif [ ${MSSHOPT:0:1} -eq 1 ] || [ ${MSSHOPT:0:1} -eq 2 ]; then
+            # We do seem to have oldstyle options here.
+            MPROTO=${MSSHOPT:0:1}
+            MKEYFILE=${MSSHOPT:1}
+            SSHOPT=""
+        else
+            error "I don't know what is configured for mirror ${MLNAME}"
+            continue
+        fi
+    else
+        MPROTO=2
 		MKEYFILE="${BASEDIR}/${KEYFILE}"
-	fi
-	# Now, people can do stupid things and leave out the protocol, but
-	# define a keyfile...
-	if [ ${MPROTO} -ne 1 ] && [ ${MPROTO} -ne 2 ]; then
-		error "Need a correct ssh protocol version for ${MLNAME}, skipping" >> ${LOG}
-		continue
-	fi
+        SSHOPT=""
+    fi
 
 	# Built our array
 	SIGNAL_OPTS=(
@@ -144,6 +168,7 @@ while read MTYPE MLNAME MHOSTNAME MUSER MPROTO MKEYFILE; do
 		USERNAME="${MUSER}"
 		SSHPROTO="${MPROTO}"
 		SSHKEY="${MKEYFILE}"
+		SSHOPTS="${SSHOPT/ /#}"
 		PUSHLOCKOWN="${LOCKDIR}/${MLNAME}.stage1"
 		PUSHTYPE="${MTYPE}"
 		PUSHARCHIVE=${PUSHARCHIVE}

@@ -39,16 +39,31 @@ signal () {
     PUSHARCHIVE=${PUSHARCHIVE:-""}
     PUSHCB=${PUSHCB:-""}
 
+    # And now get # back to space...
+    SSHOPTS=${SSHOPTS/\#/ }
+
     # Defaults we always want, no matter what
-    SSH_OPTIONS="-o BatchMode=yes -o SetupTimeOut=45 -o ConnectTimeout=45 -o PasswordAuthentication=no"
+    SSH_OPTIONS="-o user=${USERNAME} -o BatchMode=yes -o SetupTimeOut=45 -o ConnectTimeout=45 -o PasswordAuthentication=no"
 
     if [ -n "${SSH_OPTS}" ]; then
         SSH_OPTIONS="${SSH_OPTIONS} ${SSH_OPTS}"
     fi
 
-    if [ ${SSHPROTO} -ne 1 ] && [ ${SSHPROTO} -ne 2 ]; then
-        # Idiots, we only want 1 or 2. Cant decide? Lets force 2
-        ${SSHPROTO}=2
+    if [ -n "${SSHKEY}" ]; then
+        SSH_OPTIONS="${SSH_OPTIONS} -i ${SSHKEY}"
+    fi
+
+    if [ -n "${SSHOPTS}" ]; then
+        SSH_OPTIONS="${SSH_OPTIONS} ${SSHOPTS}"
+    fi
+
+    if [ ${SSHPROTO} -ne 1 ] && [ ${SSHPROTO} -ne 2 ] && [ ${SSHPROTO} -ne 99 ]; then
+        # Idiots, we only want 1 or 2. Cant decide? Lets force 2.
+        SSHPROTO=2
+    fi
+
+    if [ -n "${SSHPROTO}" ] && [ ${SSHPROTO} -ne 99 ]; then
+        SSH_OPTIONS="${SSH_OPTIONS} -${SSHPROTO}"
     fi
 
     date -u >> "${LOGDIR}/${MIRROR}.log"
@@ -65,14 +80,14 @@ signal () {
         # Default normal "fire and forget" push
         echo "Sending normal push" >> "${LOGDIR}/${MIRROR}.log"
         PUSHARGS1="sync:all"
-        ssh $SSH_OPTIONS -i "${SSHKEY}" -o"user ${USERNAME}" -${SSHPROTO} "${HOSTNAME}" "${PUSHARGS} ${PUSHARGS1}" >>"${LOGDIR}/${MIRROR}.log" 2>&1 &
+        ssh $SSH_OPTIONS "${HOSTNAME}" "${PUSHARGS} ${PUSHARGS1}" >>"${LOGDIR}/${MIRROR}.log" 2>&1 &
     elif [ "xstagedx" = "x${PUSHTYPE}x" ]; then
         # Want a staged push. Fine, lets do that
         echo "Sending staged push" >> "${LOGDIR}/${MIRROR}.log"
 
         # Step1: Do a push to only sync stage1, do not background
         PUSHARGS1="sync:stage1"
-        ssh $SSH_OPTIONS -i "${SSHKEY}" -o"user ${USERNAME}" -${SSHPROTO} "${HOSTNAME}" "${PUSHARGS} ${PUSHARGS1}" >>"${LOGDIR}/${MIRROR}.log" 2>&1
+        ssh $SSH_OPTIONS "${HOSTNAME}" "${PUSHARGS} ${PUSHARGS1}" >>"${LOGDIR}/${MIRROR}.log" 2>&1
         touch "${PUSHLOCKOWN}"
 
         # Step2: Wait for all the other "lock"files to appear.
@@ -111,7 +126,7 @@ signal () {
         # Step3: It either timed out or we have all the "lock"files, sync stage2
         PUSHARGS2="sync:stage2"
         echo "Now doing the second stage push" >> "${LOGDIR}/${MIRROR}.log"
-        ssh $SSH_OPTIONS -i "${SSHKEY}" -o"user ${USERNAME}" -${SSHPROTO} "${HOSTNAME}" "${PUSHARGS} ${PUSHARGS2}" >>"${LOGDIR}/${MIRROR}.log" 2>&1
+        ssh $SSH_OPTIONS "${HOSTNAME}" "${PUSHARGS} ${PUSHARGS2}" >>"${LOGDIR}/${MIRROR}.log" 2>&1
     else
         # Can't decide? Then you get nothing.
         return
