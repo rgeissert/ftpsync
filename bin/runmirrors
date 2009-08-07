@@ -54,7 +54,7 @@ MIRRORS=${MIRRORS:-"${BASEDIR}/etc/${NAME}.mirror"}
 # used by log()
 PROGRAM=${PROGRAM:-"${NAME}-$(hostname -s)"}
 # extra ssh options we might want hostwide
-SSH_OPTS=${SSH_OPTS:-""}
+SSH_OPTS=${SSH_OPTS:-"-o StrictHostKeyChecking=no"}
 # Whats our archive name? We will also tell our leafs about it
 PUSHARCHIVE=${PUSHARCHIVE:-"${CONF}"}
 # How long to wait for mirrors to do stage1 if we have multi-stage syncing
