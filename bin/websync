@@ -126,7 +126,7 @@ TO=${TO:-"/org/www.debian.org/www"}
 PROGRAM=${PROGRAM:-"${NAME}-$(hostname -s)"}
 
 # Where to send mails about mirroring to?
-if [ "x$(hostname -s)x" != "x${MIRRORNAME%%.debian.org}x" ]; then
+if [ "x$(hostname -d)x" != "xdebian.orgx" ]; then
 	# We are not on a debian.org host
 	MAILTO=${MAILTO:-"root"}
 else
