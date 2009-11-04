@@ -175,7 +175,7 @@ EXCLUDE=${EXCLUDE:-"--exclude ${HOSTNAME}"}
 EXCLUDE="${EXCLUDE} --exclude .~tmp~/"
 
 # And site specific excludes, by default its the sponsor stuff that should be local to all
-SITE_EXCLUDE=${SITE_EXCLUDE:-"--exclude core --exclude sponsor_img.jpg --exclude sponsor.html"}
+SITE_FILTER=${SITE_FILTER:-"--filter=protect_sponsor_img.jpg --filter=protect_sponsor.html"}
 
 # Hooks
 HOOK1=${HOOK1:-""}
@@ -249,10 +249,10 @@ while [ -e "${UPDATEREQUIRED}" ]; do
 	log "Running mirrorsync, update is required, ${UPDATEREQUIRED} exists"
 
 	rm -f "${UPDATEREQUIRED}"
-	log "Syncing: ${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS2} ${EXCLUDE} ${SITE_EXCLUDE}  ${RSYNCPTH}::${RSYNC_PATH} ${TO}"
+	log "Syncing: ${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS2} ${EXCLUDE} ${SITE_FILTER}  ${RSYNCPTH}::${RSYNC_PATH} ${TO}"
 
 	set +e
-	${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS2} ${EXCLUDE} ${SITE_EXCLUDE} \
+	${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS2} ${EXCLUDE} ${SITE_FILTER} \
 		${RSYNCPTH}::${RSYNC_PATH} "${TO}" >"${LOGDIR}/rsync-${NAME}.log" 2>"${LOGDIR}/rsync-${NAME}.error"
 	result=$?
 	set -e
