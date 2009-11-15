@@ -174,8 +174,8 @@ EXCLUDE=${EXCLUDE:-"--exclude ${HOSTNAME}"}
 # world-readable remotely. Always exclude it to avoid errors.
 EXCLUDE="${EXCLUDE} --exclude .~tmp~/"
 
-# And site specific excludes, by default its the sponsor stuff that should be local to all
-SITE_FILTER=${SITE_FILTER:-"--filter=protect_sponsor_img.jpg --filter=protect_sponsor.html"}
+# And site specific excludes, by default its the sponsor stuff that should be local to all (except templates)
+SITE_FILTER=${SITE_FILTER:-"--include sponsor.deb.* --exclude sponsor_img.* --exclude sponsor.html --exclude sponsor.*.html --filter=protect_sponsor_img.* --filter=protect_sponsor.html --filter=protect_sponsor.*.html"}
 
 # Hooks
 HOOK1=${HOOK1:-""}

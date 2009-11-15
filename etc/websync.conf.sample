@@ -57,7 +57,7 @@
 #EXCLUDE=${EXCLUDE:-"--exclude ${HOSTNAME}"}
 
 ## And site specific excludes, by default its the sponsor stuff that should be local to all
-#SITE_FILTER=${SITE_FILTER:-"--filter=protect_sponsor_img.jpg --filter=protect_sponsor.html"}
+#SITE_FILTER=${SITE_FILTER:-"--include sponsor.deb.* --exclude sponsor_img.* --exclude sponsor.html --exclude sponsor.*.html --filter=protect_sponsor_img.* --filter=protect_sponsor.html --filter=protect_sponsor.*.html"}
 
 ## Do we have leaf mirror to signal we are done and they should sync?
 ## If so set it to true and make sure you configure runmirrors-websync.mirrors
