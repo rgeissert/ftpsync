@@ -19,7 +19,7 @@
 #RSYNC_PATH="web.debian.org"
 
 ## The host we mirror from
-#RSYNC_HOST=some.mirror.debian.org
+#RSYNC_HOST=www-master.debian.org
 
 ## In case we need a user to access the rsync share at our upstream host
 #RSYNC_USER=
