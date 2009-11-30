@@ -43,7 +43,7 @@ signal () {
     SSHOPTS=${SSHOPTS/\#/ }
 
     # Defaults we always want, no matter what
-    SSH_OPTIONS="-o user=${USERNAME} -o BatchMode=yes -o SetupTimeOut=45 -o ConnectTimeout=45 -o PasswordAuthentication=no"
+    SSH_OPTIONS="-o user=${USERNAME} -o BatchMode=yes -o ServerAliveInterval=45 -o ConnectTimeout=45 -o PasswordAuthentication=no"
 
     if [ -n "${SSH_OPTS}" ]; then
         SSH_OPTIONS="${SSH_OPTIONS} ${SSH_OPTS}"
@@ -136,7 +136,7 @@ signal () {
 # callback, used by ftpsync
 callback () {
     # Defaults we always want, no matter what
-    SSH_OPTIONS="-o BatchMode=yes -o SetupTimeOut=45 -o ConnectTimeout=45 -o PasswordAuthentication=no"
+    SSH_OPTIONS="-o BatchMode=yes -o ServerAliveInterval=45 -o ConnectTimeout=45 -o PasswordAuthentication=no"
     ssh $SSH_OPTIONS -i "$3" -o"user $1" "$2" callback:${HOSTNAME}
 }
 
