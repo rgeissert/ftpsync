@@ -344,6 +344,7 @@ if ! ( set -o noclobber; echo "$$" > "${LOCK}") 2> /dev/null; then
 	fi
 fi
 
+# No matter how we exit this script, we always want to run the cleanup action
 trap cleanup EXIT ERR TERM HUP INT QUIT
 
 # Start log by redirecting everything there.
