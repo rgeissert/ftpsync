@@ -37,8 +37,7 @@ Usage:\n\n
 
 2.) using getopt style parameters:\n
 \t -a [NAME]   - Same as 1.) above, used for the config files. Default empty.\n
-\t -k [TYPE]   - Type of push. all, mhop. Default all.\n
-\t -s [STAGE]  - Stage of push. stage1, stage2, all. Default all.\n
+\t -k [TYPE]   - Type of push. all, stage2, mhop. Default all.\n
 \t -f          - Run from within the mirrorscript ftpsync. Don't use from commandline!\n
 \t -h          - Print this help and exit
 "
