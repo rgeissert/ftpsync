@@ -56,6 +56,7 @@ VERSION="80286"
 # stage1		 Only do stage1 sync
 # stage2		 Only do stage2 sync
 # all			 Do a complete sync
+# mhop           Do a mhop sync, usually additionally to stage1
 # archive:foo    Sync archive foo (if config for foo is available)
 # callback       Call back when done (needs proper ssh setup for this to
 #                work). It will always use the "command" callback:$HOSTNAME
@@ -88,6 +89,9 @@ check_commandline() {
 				;;
 			sync:all)
 				SYNCALL="true"
+				;;
+			sync:mhop)
+				SYNCMHOP="true"
 				;;
 			*)
 				echo "Unknown option ${1} ignored"
@@ -280,6 +284,8 @@ SYNCSTAGE1=${SYNCSTAGE1:-"false"}
 SYNCSTAGE2=${SYNCSTAGE2:-"false"}
 # Do we sync all?
 SYNCALL=${SYNCALL:-"true"}
+# Do we have a mhop sync?
+SYNCMHOP=${SYNCMHOP:-"false"}
 # Do we callback?
 SYNCCALLBACK=${SYNCCALLBACK:-"false"}
 # If we call back we need some more options defined in the config file.
