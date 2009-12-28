@@ -467,13 +467,14 @@ function mainroutine() {
             RUNMIRRORARGS="${RUNMIRRORARGS} -f"
 
             if [ "xtruex" = "x${SYNCSTAGE1}x" ]; then
-                # This is true when we have a mhop sync. And only then, due to the earlier if.
-                # So if that happens, tell runmirrors we are doing mhop stage1.
-                RUNMIRRORARGS="${RUNMIRRORARGS} -s stage1 -k mhop"
+                # This is true when we have a mhop sync. A normal multi-stage push sending stage1 will
+                # not get to this point.
+                # So if that happens, tell runmirrors we are doing mhop
+                RUNMIRRORARGS="${RUNMIRRORARGS} -k mhop"
             elif [ "xtruex" = "x${SYNCSTAGE2}x" ]; then
-                RUNMIRRORARGS="${RUNMIRRORARGS} -s stage2"
+                RUNMIRRORARGS="${RUNMIRRORARGS} -k stage2"
             elif [ "xtruex" = "x${SYNCALL}x" ]; then
-                RUNMIRRORARGS="${RUNMIRRORARGS} -s all"
+                RUNMIRRORARGS="${RUNMIRRORARGS} -k all"
             fi
             log "Trigger slave mirrors"
             ${BASEDIR}/bin/runmirrors "${RUNMIRRORARGS}"
