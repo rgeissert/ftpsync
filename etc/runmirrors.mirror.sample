@@ -7,6 +7,7 @@
 #
 # Type ShortName HostName User -$SOMESSHOPTION
 #
+# The fields Type, ShortName, HostName and User are *mandantory*.
 #
 # Type is either all or staged, meaning:
 # all    - do a "normal" push. Trigger them, go on.
@@ -33,6 +34,11 @@
 # want. There is currently no way around this, as that would mean
 # dropping backward compatibility.
 #
+# Backwards compatibility:
+# An older runmirrors script will NOT run with a newer runmirrors.mirror file, but
+# a new runmirrors can run with an old runmirrors.mirror file. This should make updates
+# painless.
+#
 # Examples:
 # all eu.puccini puccini.debian.org archvsync 2
 #
@@ -43,11 +49,11 @@
 #
 # which will do the same as above, but use port 2222 to connect to.
 #
-# staged eu.puccini puccini.debian.org
-# staged eu.powell powell.debian.org
+# staged eu.puccini puccini.debian.org archvsync
+# staged eu.powell powell.debian.org archvsync
 #
 # will push both puccini and powell in stage1, waiting for both to
-# finish stage1 before stage2 gets pushed.
+# finish stage1 before stage2 gets pushed. The username will be archvsync.
 #
 # One special value is allowed: DELAY
 # This word has to be on a line itself, followed by a space and a number.
