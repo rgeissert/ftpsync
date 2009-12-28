@@ -458,18 +458,33 @@ function mainroutine() {
 	rm -f "${LOCK}"
 
     if [ x${HUB} = "xtrue" ]; then
-		# Only trigger slave mirrors if we had a push for stage2 or all
-	    if [ "xtruex" = "x${SYNCSTAGE2}x" ] || [ "xtruex" = "x${SYNCALL}x" ]; then
-		    log "Trigger slave mirrors"
-		    ${BASEDIR}/bin/runmirrors "${ARCHIVE}"
-		    log "Trigger slave done"
+        # Trigger slave mirrors if we had a push for stage2 or all, or if its mhop
+        if [ "xtruex" = "x${SYNCSTAGE2}x" ] || [ "xtruex" = "x${SYNCALL}x" ] || [ "xtruex" = "x${SYNCMHOP}x" ]; then
+            # We tell runmirrors about the archive we are running on. Might be empty.
+            RUNMIRRORARGS="-a ${ARCHIVE}"
+            # We also tell runmirrors that we are running it from within ftpsync, so it can change
+            # the way it works with mhop based on that.
+            RUNMIRRORARGS="${RUNMIRRORARGS} -f"
 
-		    HOOK=(
-			    HOOKNR=5
-			    HOOKSCR=${HOOK5}
-		    )
-		    hook $HOOK
-	    fi
+            if [ "xtruex" = "x${SYNCSTAGE1}x" ]; then
+                # This is true when we have a mhop sync. And only then, due to the earlier if.
+                # So if that happens, tell runmirrors we are doing mhop stage1.
+                RUNMIRRORARGS="${RUNMIRRORARGS} -s stage1 -k mhop"
+            elif [ "xtruex" = "x${SYNCSTAGE2}x" ]; then
+                RUNMIRRORARGS="${RUNMIRRORARGS} -s stage2"
+            elif [ "xtruex" = "x${SYNCALL}x" ]; then
+                RUNMIRRORARGS="${RUNMIRRORARGS} -s all"
+            fi
+            log "Trigger slave mirrors"
+            ${BASEDIR}/bin/runmirrors "${RUNMIRRORARGS}"
+            log "Trigger slave done"
+
+            HOOK=(
+                HOOKNR=5
+                HOOKSCR=${HOOK5}
+            )
+            hook $HOOK
+        fi
     fi
 
     # All done, lets call cleanup
