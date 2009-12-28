@@ -92,6 +92,7 @@ PUSHKIND=${PUSHKIND:-"all"}
 # If we are pushed from within ftpsync. Default false.
 FROMFTPSYNC=${FROMFTPSYNC:-"false"}
 
+########################################################################
 # Read our config file
 . "${BASEDIR}/etc/${NAME}.conf"
 
@@ -137,6 +138,8 @@ fi
 HOOK1=${HOOK1:-""}
 HOOK2=${HOOK2:-""}
 HOOK3=${HOOK3:-""}
+
+########################################################################
 
 # Some sane defaults
 cd ${BASEDIR}
