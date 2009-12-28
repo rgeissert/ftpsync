@@ -28,11 +28,69 @@ BASEDIR=${BASEDIR:-"${HOME}"}
 
 NAME="`basename $0`"
 
-# In case we are called with an argument we look for a different configuration.
-CONF=${1:-""}
-if [ -n "${CONF}" ]; then
-	NAME="${NAME}-${CONF}"
+HELP="$0, (C) 2008, 2009 by Joerg Jaspert <joerg@debian.org>\n
+Usage:\n\n
+
+1.) a single parameter with NO leading -.\n
+\t  This will will then be used as the addition for our configfile. Ie. \`$0 security\` will\n
+\t  have us look for ${NAME}-security.{conf,mirror} files.\n\n
+
+2.) using getopt style parameters:\n
+\t -a [NAME]   - Same as 1.) above, used for the config files. Default empty.\n
+\t -k [TYPE]   - Type of push. all, mhop. Default all.\n
+\t -s [STAGE]  - Stage of push. stage1, stage2, all. Default all.\n
+\t -f          - Run from within the mirrorscript ftpsync. Don't use from commandline!\n
+\t -h          - Print this help and exit
+"
+# If we got options, lets see if we use newstyle options, or oldstyle. If oldstyle
+# it will not start with a -. If we find oldstyle we assume its only one, the config
+# name we run on.
+if [ $# -gt 0 ]; then
+    if [ "x${1:0:1}x" != "x-x" ]; then
+        # Yes, does not start with a -, so use it for the config name.
+        CONF=${1:-""}
+        if [ -n "${CONF}" ]; then
+            NAME="${NAME}-${CONF}"
+        fi
+    else
+        # Yeah well, new style, starting with - for getopts
+        while getopts ':a:k:fh' OPTION ; do
+            case $OPTION in
+                a)	CONF=${OPTARG}
+                    NAME=${NAME}-${CONF}
+                    ;;
+                k)	PUSHKIND=${OPTARG}
+                    ;;
+                f)	FROMFTPSYNC="true"
+                    ;;
+                h)	echo -e $HELP
+                    exit 0
+                    ;;
+
+                \?)	echo "Unknown option \"-$OPTARG\"."
+                    echo -e $HELP
+                    exit 1
+                    ;;
+                :)	echo "Option \"-$OPTARG\" needs an argument."
+                    echo -e $HELP 
+                    exit 1
+                    ;;
+            esac
+        done
+    fi
 fi
+# Make sure the values are always defined, even if there was no commandline option
+# for them
+# Default config is empty
+CONF=${CONF:-""}
+
+# Set the default to all, if we didnt get told about it. Currently
+# valid: all - normal push. mhop - multi-hop multi-stage push. Default is all.
+# If mhop we will run a normal stage1 push *and then exit*.
+PUSHKIND=${PUSHKIND:-"all"}
+
+# If we are pushed from within ftpsync. Default false.
+FROMFTPSYNC=${FROMFTPSYNC:-"false"}
 
 # Read our config file
 . "${BASEDIR}/etc/${NAME}.conf"
