@@ -84,8 +84,8 @@ fi
 CONF=${CONF:-""}
 
 # Set the default to all, if we didnt get told about it. Currently
-# valid: all - normal push. mhop - multi-hop multi-stage push. Default is all.
-# If mhop we will run a normal stage1 push *and then exit*.
+# valid: all - normal push. mhop - multi-hop multi-stage push, this is stage1,
+# stage2 - staged push, second phase. Default is all.
 PUSHKIND=${PUSHKIND:-"all"}
 
 # If we are pushed from within ftpsync. Default false.
@@ -182,6 +182,14 @@ while read MTYPE MLNAME MHOSTNAME MUSER MSSHOPT; do
 		sleep ${MLNAME}
 		continue
 	fi
+
+    # If we are told we have a mhop sync to do, we will only look at staged/mhop
+    # entries and ignore the rest.
+    if [ "x${PUSHKIND}x" = "xmhopx" ]; then
+        if [ "x${MTYPE}x" != "xstagedx" ] || [ "x${MTYPE}x" != "xmhopx" ]; then
+            continue
+        fi
+    fi
 
     # Now, MSSHOPT may start with a -. In that case the whole rest of the line is taken
     # as a set of options to give to ssh, we pass it without doing anything with it.
