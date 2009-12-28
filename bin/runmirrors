@@ -66,12 +66,8 @@ if [ $# -gt 0 ]; then
                     exit 0
                     ;;
 
-                \?)	echo "Unknown option \"-$OPTARG\"."
-                    echo -e $HELP
-                    exit 1
-                    ;;
-                :)	echo "Option \"-$OPTARG\" needs an argument."
-                    echo -e $HELP 
+                *)  echo "Invalid usage"
+		            echo -e $HELP 
                     exit 1
                     ;;
             esac
