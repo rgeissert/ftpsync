@@ -38,6 +38,8 @@ signal () {
     PUSHTYPE=${PUSHTYPE:-"all"}
     PUSHARCHIVE=${PUSHARCHIVE:-""}
     PUSHCB=${PUSHCB:-""}
+    PUSHKIND=${PUSHKIND:-"all"}
+    FROMFTPSYNC=${FROMFTPSYNC:-"false"}
 
     # And now get # back to space...
     SSHOPTS=${SSHOPTS/\#/ }
