@@ -17,6 +17,8 @@
 #                         then push stage2
 # $PUSHARCHIVE - what archive to sync? (Multiple mirrors behind one ssh key!)
 # $PUSHCB      - do we want a callback?
+# $PUSHKIND    - whats going on? are we doing mhop push or already stage2?
+# $FROMFTPSYNC - set to true if we run from within ftpsync.
 #
 # This function assumes that the variable LOG is set to a directory where
 # logfiles can be written to.
@@ -47,23 +49,26 @@ signal () {
     # Defaults we always want, no matter what
     SSH_OPTIONS="-o user=${USERNAME} -o BatchMode=yes -o ServerAliveInterval=45 -o ConnectTimeout=45 -o PasswordAuthentication=no"
 
+    # If there are userdefined ssh options, add them.
     if [ -n "${SSH_OPTS}" ]; then
         SSH_OPTIONS="${SSH_OPTIONS} ${SSH_OPTS}"
     fi
 
+    # Does this machine need a special key?
     if [ -n "${SSHKEY}" ]; then
         SSH_OPTIONS="${SSH_OPTIONS} -i ${SSHKEY}"
     fi
 
+    # Does this machine have an extra own set of ssh options?
     if [ -n "${SSHOPTS}" ]; then
         SSH_OPTIONS="${SSH_OPTIONS} ${SSHOPTS}"
     fi
 
+    # Set the protocol version
     if [ ${SSHPROTO} -ne 1 ] && [ ${SSHPROTO} -ne 2 ] && [ ${SSHPROTO} -ne 99 ]; then
         # Idiots, we only want 1 or 2. Cant decide? Lets force 2.
         SSHPROTO=2
     fi
-
     if [ -n "${SSHPROTO}" ] && [ ${SSHPROTO} -ne 99 ]; then
         SSH_OPTIONS="${SSH_OPTIONS} -${SSHPROTO}"
     fi
@@ -86,12 +91,12 @@ signal () {
     fi
 
     if [ "xallx" = "x${PUSHTYPE}x" ]; then
-        # Default normal "fire and forget" push
+        # Default normal "fire and forget" push. We background that, we do not care about the mirrors doings
         echo "Sending normal push" >> "${LOGDIR}/${MIRROR}.log"
         PUSHARGS1="sync:all"
         ssh $SSH_OPTIONS "${HOSTNAME}" "${PUSHARGS} ${PUSHARGS1}" >>"${LOGDIR}/${MIRROR}.log" 2>&1 &
     elif [ "xstagedx" = "x${PUSHTYPE}x" ]; then
-        # Want a staged push. Fine, lets do that
+        # Want a staged push. Fine, lets do that. Not backgrounded. We care about the mirrors doings.
         echo "Sending staged push" >> "${LOGDIR}/${MIRROR}.log"
 
         # Only send stage1 if we havent already send it. When called with stage2, we already did.
