@@ -55,10 +55,10 @@ if [ $# -gt 0 ]; then
         # Yeah well, new style, starting with - for getopts
         while getopts ':a:k:fh' OPTION ; do
             case $OPTION in
-                a)	CONF=${OPTARG}
-                    NAME=${NAME}-${CONF}
+                a)	CONF="${OPTARG}"
+                    NAME="${NAME}-${CONF}"
                     ;;
-                k)	PUSHKIND=${OPTARG}
+                k)	PUSHKIND="${OPTARG}"
                     ;;
                 f)	FROMFTPSYNC="true"
                     ;;
