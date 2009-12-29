@@ -9,10 +9,13 @@
 #
 # The fields Type, ShortName, HostName and User are *mandantory*.
 #
-# Type is either all or staged, meaning:
+# Type is either all, staged or mhop, meaning:
 # all    - do a "normal" push. Trigger them, go on.
 # staged - do a two-stage push, waiting for them after stage 2(and all others that
 #          are staged) before doing stage2
+# mhop   - send a multi-hop staged push. This will tell the mirror to initiate
+#          a mhop/stage1 push to its staged/mhop mirrors and then exit.
+#          When all mhop got back we then send the stage2 through to them.
 #
 # ShortName will be used as a shorthand in logfile outputs and for the logfile
 # where every ssh output gets redirected to.
@@ -42,18 +45,25 @@
 # Examples:
 # all eu.puccini puccini.debian.org archvsync 2
 #
-# will push puccini.debian.org, user archvsync, using ssh protocol 2 and the specified ssh key.
-#
+# -> will push puccini.debian.org, user archvsync, using ssh protocol 2
+#    and the globally configured ssh key.
 #
 # all eu.puccini puccini.debian.org archvsync -p 2222
 #
-# which will do the same as above, but use port 2222 to connect to.
+# -> will do the same as above, but use port 2222 to connect to.
 #
 # staged eu.puccini puccini.debian.org archvsync
 # staged eu.powell powell.debian.org archvsync
 #
-# will push both puccini and powell in stage1, waiting for both to
-# finish stage1 before stage2 gets pushed. The username will be archvsync.
+# -> will push both puccini and powell in stage1, waiting for both to
+#    finish stage1 before stage2 gets pushed. The username will be archvsync.
+#
+# staged eu.puccini puccini.debian.org archvsync
+# mhop eu.powell powell.debian.org archvsync
+#
+# -> will do the same as above, but powell gets told about mhop and can then
+#    push its own staged/mhop mirrors before returning. When both returned
+#    then stage2 is sent to both.
 #
 # One special value is allowed: DELAY
 # This word has to be on a line itself, followed by a space and a number.
