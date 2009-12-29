@@ -172,7 +172,7 @@ while read MTYPE MLNAME MHOSTNAME MUSER MSSHOPT; do
 	if [ "x${MTYPE}x" = "xDELAYx" ]; then
 		# We should wait a bit.
 		if [ -z ${MLNAME} ]; then
-			MLNAME=60
+			MLNAME=600
 		fi
 		log "Delay of ${MLNAME} requested, sleeping" >> "${LOG}"
 		sleep ${MLNAME}
