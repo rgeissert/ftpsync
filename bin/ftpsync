@@ -266,6 +266,13 @@ RSYNC_OPTIONS2=${RSYNC_OPTIONS2:-"--max-delete=40000 --delay-updates --delete --
 # Which rsync share to use on our upstream mirror?
 RSYNC_PATH=${RSYNC_PATH:-"ftp"}
 
+# We have no default host to sync from, but will error out if its unset
+RSYNC_HOST=${RSYNC_HOST:-""}
+# Error out if we have no host to sync from
+if [ -z "${RSYNC_HOST}" ]; then
+    error "Missing a host to mirror from, please set RSYNC_HOST variable in ${BASEDIR}/etc/${NAME}.conf"
+fi
+
 # our username for the rsync share
 RSYNC_USER=${RSYNC_USER:-""}
 # the password
