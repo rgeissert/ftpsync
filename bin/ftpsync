@@ -448,10 +448,14 @@ function mainroutine() {
 	    hook $HOOK
     done
 
-    if [ -d "`dirname "${TO}/${TRACE}"`" ]; then
-        LC_ALL=POSIX LANG=POSIX date -u > "${TO}/${TRACE}"
-        echo "Used ftpsync version: ${VERSION}" >> "${TO}/${TRACE}"
-	    echo "Running on host: $(hostname -f)" >> "${TO}/${TRACE}"
+    # We only update our tracefile when we had a stage2 or an all sync.
+    # Otherwise we would update it after stage1 already, which is wrong.
+	if [ "xtruex" = "x${SYNCSTAGE2}x" ] || [ "xtruex" = "x${SYNCALL}x" ]; then
+        if [ -d "`dirname "${TO}/${TRACE}"`" ]; then
+            LC_ALL=POSIX LANG=POSIX date -u > "${TO}/${TRACE}"
+            echo "Used ftpsync version: ${VERSION}" >> "${TO}/${TRACE}"
+	        echo "Running on host: $(hostname -f)" >> "${TO}/${TRACE}"
+        fi
     fi
 
     HOOK=(
