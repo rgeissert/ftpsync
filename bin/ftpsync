@@ -270,6 +270,13 @@ RSYNC_OPTIONS2=${RSYNC_OPTIONS2:-"--max-delete=40000 --delay-updates --delete --
 # Which rsync share to use on our upstream mirror?
 RSYNC_PATH=${RSYNC_PATH:-"ftp"}
 
+# We have no default host to sync from, but will error out if its unset
+RSYNC_HOST=${RSYNC_HOST:-""}
+# Error out if we have no host to sync from
+if [ -z "${RSYNC_HOST}" ]; then
+    error "Missing a host to mirror from, please set RSYNC_HOST variable in ${BASEDIR}/etc/${NAME}.conf"
+fi
+
 # our username for the rsync share
 RSYNC_USER=${RSYNC_USER:-""}
 # the password
@@ -328,7 +335,12 @@ HUB=${HUB:-"false"}
 # A function for the majority of the work. This function *CAN* run backgrounded.
 # It will be when we simply sync all. Staged syncs will not background, of course.
 function mainroutine() {
-# Look who pushed us and note that in the log.
+    if [ $BASH_SUBSHELL -gt 0 ]; then
+        log "Mirrorrun is done backgrounded"
+        # Update our pid in our lockfile. Helps for the cases we go background
+        echo "${BASHPID}" > "${LOCK}"
+    fi
+    # Look who pushed us and note that in the log.
     log "Mirrorsync start"
     PUSHFROM="${SSH_CONNECTION%%\ *}"
     if [ -n "${PUSHFROM}" ]; then
@@ -537,6 +549,9 @@ exec >"$LOG" 2>&1 </dev/null
 if [ "xtruex" = "x${SYNCALL}x" ]; then
     # We have a simple normal mirror run, not staged. Lets background it.
     mainroutine &
+    # Wait 2 seconds before we exit, then the ${LOCK} for sure has the pid
+    # of the mainroutine in it
+    sleep 2
 else
     # Staged run, we have to wait until we are done before we exit, uplink
     # is using that for synchronisation
