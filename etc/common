@@ -76,7 +76,6 @@ signal () {
     date -u >> "${LOGDIR}/${MIRROR}.log"
 
     PUSHARGS=""
-
     # Archive is non-empty, so tell the downstreams
     if [ -n "${PUSHARCHIVE}" ]; then
         PUSHARGS="${PUSHARGS} sync:archive:${PUSHARCHIVE}"
@@ -95,7 +94,7 @@ signal () {
         echo "Sending normal push" >> "${LOGDIR}/${MIRROR}.log"
         PUSHARGS1="sync:all"
         ssh $SSH_OPTIONS "${HOSTNAME}" "${PUSHARGS} ${PUSHARGS1}" >>"${LOGDIR}/${MIRROR}.log" 2>&1 &
-    elif [ "xstagedx" = "x${PUSHTYPE}x" ]; then
+    elif [ "xstagedx" = "x${PUSHTYPE}x" ] || [ "xmhopx" = "x${PUSHTYPE}x" ]; then
         # Want a staged push. Fine, lets do that. Not backgrounded. We care about the mirrors doings.
         echo "Sending staged push" >> "${LOGDIR}/${MIRROR}.log"
 
