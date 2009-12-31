@@ -181,9 +181,9 @@ while read MTYPE MLNAME MHOSTNAME MUSER MSSHOPT; do
 		continue
 	fi
 
-    # If we are told we have a mhop sync to do, we will only look at staged/mhop
-    # entries and ignore the rest.
-    if [ "x${PUSHKIND}x" = "xmhopx" ]; then
+    # If we are told we have a mhop sync to do and are called from within ftpsync,
+    # we will only look at staged/mhop entries and ignore the rest.
+    if [ "x${PUSHKIND}x" = "xmhopx" ] && [ "x${FROMFTPSYNC}x" = "xtruex" ]; then
         if [ "x${MTYPE}x" != "xstagedx" ] && [ "x${MTYPE}x" != "xmhopx" ]; then
             continue
         fi
