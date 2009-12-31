@@ -476,8 +476,11 @@ function mainroutine() {
     if [ x${HUB} = "xtrue" ]; then
 		# Trigger slave mirrors if we had a push for stage2 or all, or if its mhop
 	    if [ "xtruex" = "x${SYNCSTAGE2}x" ] || [ "xtruex" = "x${SYNCALL}x" ] || [ "xtruex" = "x${SYNCMHOP}x" ]; then
-		# We tell runmirrors about the archive we are running on. Might be empty.
-			RUNMIRRORARGS="-a ${ARCHIVE}"
+            RUNMIRRORARGS=""
+            if [ -n "${ARCHIVE}" ]; then
+                # We tell runmirrors about the archive we are running on.
+			    RUNMIRRORARGS="-a ${ARCHIVE}"
+            fi
 			# We also tell runmirrors that we are running it from within ftpsync, so it can change
 			# the way it works with mhop based on that.
 			RUNMIRRORARGS="${RUNMIRRORARGS} -f"
