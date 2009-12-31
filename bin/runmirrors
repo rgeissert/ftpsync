@@ -148,7 +148,7 @@ mkdir -p "${LOCKDIR}"
 
 trap 'log "Mirrorpush done" >> ${LOG}; savelog "${LOG}" > /dev/null' EXIT
 
-log "Pushing leaf mirrors" >> ${LOG}
+log "Pushing leaf mirrors. Inside ftpsync: ${FROMFTPSYNC}. Pushkind: ${PUSHKIND}" >> ${LOG}
 
 HOOK=(
 	HOOKNR=1

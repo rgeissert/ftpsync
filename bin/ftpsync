@@ -496,7 +496,7 @@ function mainroutine() {
 				RUNMIRRORARGS="${RUNMIRRORARGS} -k all"
 			fi
 		    log "Trigger slave mirrors"
-		    ${BASEDIR}/bin/runmirrors "${RUNMIRRORARGS}"
+		    ${BASEDIR}/bin/runmirrors ${RUNMIRRORARGS}
 		    log "Trigger slave done"
 
 		    HOOK=(
