@@ -37,7 +37,7 @@ Usage:\n\n
 
 2.) using getopt style parameters:\n
 \t -a [NAME]   - Same as 1.) above, used for the config files. Default empty.\n
-\t -k [TYPE]   - Type of push. all, stage2, mhop. Default all.\n
+\t -k [TYPE]   - Type of push. all, stage2, mhop. Default mhop.\n
 \t -f          - Run from within the mirrorscript ftpsync. Don't use from commandline!\n
 \t -h          - Print this help and exit
 "
@@ -83,8 +83,8 @@ CONF=${CONF:-""}
 
 # Set the default to all, if we didnt get told about it. Currently
 # valid: all - normal push. mhop - multi-hop multi-stage push, this is stage1,
-# stage2 - staged push, second phase. Default is all.
-PUSHKIND=${PUSHKIND:-"all"}
+# stage2 - staged push, second phase. Default is mhop.
+PUSHKIND=${PUSHKIND:-"mhop"}
 
 # If we are pushed from within ftpsync. Default false.
 FROMFTPSYNC=${FROMFTPSYNC:-"false"}
@@ -184,7 +184,7 @@ while read MTYPE MLNAME MHOSTNAME MUSER MSSHOPT; do
     # If we are told we have a mhop sync to do, we will only look at staged/mhop
     # entries and ignore the rest.
     if [ "x${PUSHKIND}x" = "xmhopx" ]; then
-        if [ "x${MTYPE}x" != "xstagedx" ] || [ "x${MTYPE}x" != "xmhopx" ]; then
+        if [ "x${MTYPE}x" != "xstagedx" ] && [ "x${MTYPE}x" != "xmhopx" ]; then
             continue
         fi
     fi
