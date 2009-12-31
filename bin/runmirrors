@@ -56,7 +56,9 @@ if [ $# -gt 0 ]; then
         while getopts ':a:k:fh' OPTION ; do
             case $OPTION in
                 a)	CONF="${OPTARG}"
-                    NAME="${NAME}-${CONF}"
+                    if [ -n "${CONF}" ]; then
+                        NAME="${NAME}-${CONF}"
+                    fi
                     ;;
                 k)	PUSHKIND="${OPTARG}"
                     ;;
