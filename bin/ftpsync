@@ -495,7 +495,7 @@ function mainroutine() {
 			elif [ "xtruex" = "x${SYNCALL}x" ]; then
 				RUNMIRRORARGS="${RUNMIRRORARGS} -k all"
 			fi
-		    log "Trigger slave mirrors"
+		    log "Trigger slave mirrors using ${RUNMIRRORARGS}"
 		    ${BASEDIR}/bin/runmirrors ${RUNMIRRORARGS}
 		    log "Trigger slave done"
 
