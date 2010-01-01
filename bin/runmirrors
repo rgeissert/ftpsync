@@ -255,6 +255,24 @@ while read MTYPE MLNAME MHOSTNAME MUSER MSSHOPT; do
 	set +e
 done
 
+# If we are run from within ftpsync *and* have an mhop push to send on, we have
+# to wait until the push is gone through and they all returned, or we will exit
+# much too early.
+# As the signal routine touches $LOCKDIR/all_stage1 when all are done, its
+# easy enough just to wait for that to appear. Of course we do the same game
+# with PUSHDELAY to not wait forever.
+if [ "xtruex" = "x${FROMFTPSYNC}x" ] && [ "xmhopx" = "x${PUSHKIND}x" ]; then
+    tries=0
+    # We do not wait forever
+    while [ ${tries} -lt ${PUSHDELAY} ]; do
+        if [ -f "${LOCKDIR}/all_stage1" ]; then
+            break
+        fi
+        tries=$((tries + 5))
+        sleep 5
+    done
+fi
+
 HOOK=(
 	HOOKNR=3
 	HOOKSCR=${HOOK3}
