@@ -56,6 +56,7 @@ VERSION="80286"
 # stage1		 Only do stage1 sync
 # stage2		 Only do stage2 sync
 # all			 Do a complete sync
+# mhop           Do a mhop sync, usually additionally to stage1
 # archive:foo    Sync archive foo (if config for foo is available)
 # callback       Call back when done (needs proper ssh setup for this to
 #                work). It will always use the "command" callback:$HOSTNAME
@@ -88,6 +89,9 @@ check_commandline() {
 				;;
 			sync:all)
 				SYNCALL="true"
+				;;
+			sync:mhop)
+				SYNCMHOP="true"
 				;;
 			*)
 				echo "Unknown option ${1} ignored"
@@ -287,6 +291,8 @@ SYNCSTAGE1=${SYNCSTAGE1:-"false"}
 SYNCSTAGE2=${SYNCSTAGE2:-"false"}
 # Do we sync all?
 SYNCALL=${SYNCALL:-"true"}
+# Do we have a mhop sync?
+SYNCMHOP=${SYNCMHOP:-"false"}
 # Do we callback?
 SYNCCALLBACK=${SYNCCALLBACK:-"false"}
 # If we call back we need some more options defined in the config file.
@@ -442,10 +448,14 @@ function mainroutine() {
 	    hook $HOOK
     done
 
-    if [ -d "`dirname "${TO}/${TRACE}"`" ]; then
-        LC_ALL=POSIX LANG=POSIX date -u > "${TO}/${TRACE}"
-        echo "Used ftpsync version: ${VERSION}" >> "${TO}/${TRACE}"
-	    echo "Running on host: $(hostname -f)" >> "${TO}/${TRACE}"
+    # We only update our tracefile when we had a stage2 or an all sync.
+    # Otherwise we would update it after stage1 already, which is wrong.
+	if [ "xtruex" = "x${SYNCSTAGE2}x" ] || [ "xtruex" = "x${SYNCALL}x" ]; then
+        if [ -d "`dirname "${TO}/${TRACE}"`" ]; then
+            LC_ALL=POSIX LANG=POSIX date -u > "${TO}/${TRACE}"
+            echo "Used ftpsync version: ${VERSION}" >> "${TO}/${TRACE}"
+	        echo "Running on host: $(hostname -f)" >> "${TO}/${TRACE}"
+        fi
     fi
 
     HOOK=(
@@ -464,10 +474,29 @@ function mainroutine() {
 	rm -f "${LOCK}"
 
     if [ x${HUB} = "xtrue" ]; then
-		# Only trigger slave mirrors if we had a push for stage2 or all
-	    if [ "xtruex" = "x${SYNCSTAGE2}x" ] || [ "xtruex" = "x${SYNCALL}x" ]; then
+		# Trigger slave mirrors if we had a push for stage2 or all, or if its mhop
+	    if [ "xtruex" = "x${SYNCSTAGE2}x" ] || [ "xtruex" = "x${SYNCALL}x" ] || [ "xtruex" = "x${SYNCMHOP}x" ]; then
+            RUNMIRRORARGS=""
+            if [ -n "${ARCHIVE}" ]; then
+                # We tell runmirrors about the archive we are running on.
+			    RUNMIRRORARGS="-a ${ARCHIVE}"
+            fi
+			# We also tell runmirrors that we are running it from within ftpsync, so it can change
+			# the way it works with mhop based on that.
+			RUNMIRRORARGS="${RUNMIRRORARGS} -f"
+
+			if [ "xtruex" = "x${SYNCSTAGE1}x" ]; then
+				# This is true when we have a mhop sync. A normal multi-stage push sending stage1 will
+				# not get to this point.
+				# So if that happens, tell runmirrors we are doing mhop
+				RUNMIRRORARGS="${RUNMIRRORARGS} -k mhop"
+			elif [ "xtruex" = "x${SYNCSTAGE2}x" ]; then
+				RUNMIRRORARGS="${RUNMIRRORARGS} -k stage2"
+			elif [ "xtruex" = "x${SYNCALL}x" ]; then
+				RUNMIRRORARGS="${RUNMIRRORARGS} -k all"
+			fi
 		    log "Trigger slave mirrors"
-		    ${BASEDIR}/bin/runmirrors "${ARCHIVE}"
+		    ${BASEDIR}/bin/runmirrors ${RUNMIRRORARGS}
 		    log "Trigger slave done"
 
 		    HOOK=(

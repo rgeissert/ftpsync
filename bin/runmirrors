@@ -7,7 +7,7 @@ set -u
 # Based losely on existing scripts, written by an unknown number of
 # different people over the years.
 #
-# Copyright (C) 2008 Joerg Jaspert <joerg@debian.org>
+# Copyright (C) 2008, 2009 Joerg Jaspert <joerg@debian.org>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -28,12 +28,68 @@ BASEDIR=${BASEDIR:-"${HOME}"}
 
 NAME="`basename $0`"
 
-# In case we are called with an argument we look for a different configuration.
-CONF=${1:-""}
-if [ -n "${CONF}" ]; then
-	NAME="${NAME}-${CONF}"
-fi
+HELP="$0, (C) 2008, 2009 by Joerg Jaspert <joerg@debian.org>\n
+Usage:\n\n
 
+1.) a single parameter with NO leading -.\n
+\t  This will will then be used as the addition for our configfile. Ie. \`$0 security\` will\n
+\t  have us look for ${NAME}-security.{conf,mirror} files.\n\n
+
+2.) using getopt style parameters:\n
+\t -a [NAME]   - Same as 1.) above, used for the config files. Default empty.\n
+\t -k [TYPE]   - Type of push. all, stage2, mhop. Default mhop.\n
+\t -f          - Run from within the mirrorscript ftpsync. Don't use from commandline!\n
+\t -h          - Print this help and exit
+"
+# If we got options, lets see if we use newstyle options, or oldstyle. If oldstyle
+# it will not start with a -. If we find oldstyle we assume its only one, the config
+# name we run on.
+if [ $# -gt 0 ]; then
+    if [ "x${1:0:1}x" != "x-x" ]; then
+        # Yes, does not start with a -, so use it for the config name.
+        CONF=${1:-""}
+        if [ -n "${CONF}" ]; then
+            NAME="${NAME}-${CONF}"
+        fi
+    else
+        # Yeah well, new style, starting with - for getopts
+        while getopts ':a:k:fh' OPTION ; do
+            case $OPTION in
+                a)	CONF="${OPTARG}"
+                    if [ -n "${CONF}" ]; then
+                        NAME="${NAME}-${CONF}"
+                    fi
+                    ;;
+                k)	PUSHKIND="${OPTARG}"
+                    ;;
+                f)	FROMFTPSYNC="true"
+                    ;;
+                h)	echo -e $HELP
+                    exit 0
+                    ;;
+
+                *)  echo "Invalid usage"
+		            echo -e $HELP 
+                    exit 1
+                    ;;
+            esac
+        done
+    fi
+fi
+# Make sure the values are always defined, even if there was no commandline option
+# for them
+# Default config is empty
+CONF=${CONF:-""}
+
+# Set the default to all, if we didnt get told about it. Currently
+# valid: all - normal push. mhop - multi-hop multi-stage push, this is stage1,
+# stage2 - staged push, second phase. Default is mhop.
+PUSHKIND=${PUSHKIND:-"mhop"}
+
+# If we are pushed from within ftpsync. Default false.
+FROMFTPSYNC=${FROMFTPSYNC:-"false"}
+
+########################################################################
 # Read our config file
 . "${BASEDIR}/etc/${NAME}.conf"
 
@@ -80,6 +136,8 @@ HOOK1=${HOOK1:-""}
 HOOK2=${HOOK2:-""}
 HOOK3=${HOOK3:-""}
 
+########################################################################
+
 # Some sane defaults
 cd ${BASEDIR}
 umask 022
@@ -90,7 +148,7 @@ mkdir -p "${LOCKDIR}"
 
 trap 'log "Mirrorpush done" >> ${LOG}; savelog "${LOG}" > /dev/null' EXIT
 
-log "Pushing leaf mirrors" >> ${LOG}
+log "Pushing leaf mirrors. Inside ftpsync: ${FROMFTPSYNC}. Pushkind: ${PUSHKIND}" >> ${LOG}
 
 HOOK=(
 	HOOKNR=1
@@ -116,12 +174,20 @@ while read MTYPE MLNAME MHOSTNAME MUSER MSSHOPT; do
 	if [ "x${MTYPE}x" = "xDELAYx" ]; then
 		# We should wait a bit.
 		if [ -z ${MLNAME} ]; then
-			MLNAME=60
+			MLNAME=600
 		fi
 		log "Delay of ${MLNAME} requested, sleeping" >> "${LOG}"
 		sleep ${MLNAME}
 		continue
 	fi
+
+    # If we are told we have a mhop sync to do and are called from within ftpsync,
+    # we will only look at staged/mhop entries and ignore the rest.
+    if [ "x${PUSHKIND}x" = "xmhopx" ] && [ "x${FROMFTPSYNC}x" = "xtruex" ]; then
+        if [ "x${MTYPE}x" != "xstagedx" ] && [ "x${MTYPE}x" != "xmhopx" ]; then
+            continue
+        fi
+    fi
 
     # Now, MSSHOPT may start with a -. In that case the whole rest of the line is taken
     # as a set of options to give to ssh, we pass it without doing anything with it.
@@ -172,6 +238,8 @@ while read MTYPE MLNAME MHOSTNAME MUSER MSSHOPT; do
 		PUSHLOCKOWN="${LOCKDIR}/${MLNAME}.stage1"
 		PUSHTYPE="${MTYPE}"
 		PUSHARCHIVE=${PUSHARCHIVE}
+		PUSHKIND=${PUSHKIND}
+		FROMFTPSYNC=${FROMFTPSYNC}
 	)
 
 	# And finally, push the mirror

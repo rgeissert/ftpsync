@@ -17,6 +17,8 @@
 #                         then push stage2
 # $PUSHARCHIVE - what archive to sync? (Multiple mirrors behind one ssh key!)
 # $PUSHCB      - do we want a callback?
+# $PUSHKIND    - whats going on? are we doing mhop push or already stage2?
+# $FROMFTPSYNC - set to true if we run from within ftpsync.
 #
 # This function assumes that the variable LOG is set to a directory where
 # logfiles can be written to.
@@ -38,6 +40,8 @@ signal () {
     PUSHTYPE=${PUSHTYPE:-"all"}
     PUSHARCHIVE=${PUSHARCHIVE:-""}
     PUSHCB=${PUSHCB:-""}
+    PUSHKIND=${PUSHKIND:-"all"}
+    FROMFTPSYNC=${FROMFTPSYNC:-"false"}
 
     # And now get # back to space...
     SSHOPTS=${SSHOPTS/\#/ }
@@ -45,23 +49,26 @@ signal () {
     # Defaults we always want, no matter what
     SSH_OPTIONS="-o user=${USERNAME} -o BatchMode=yes -o ServerAliveInterval=45 -o ConnectTimeout=45 -o PasswordAuthentication=no"
 
+    # If there are userdefined ssh options, add them.
     if [ -n "${SSH_OPTS}" ]; then
         SSH_OPTIONS="${SSH_OPTIONS} ${SSH_OPTS}"
     fi
 
+    # Does this machine need a special key?
     if [ -n "${SSHKEY}" ]; then
         SSH_OPTIONS="${SSH_OPTIONS} -i ${SSHKEY}"
     fi
 
+    # Does this machine have an extra own set of ssh options?
     if [ -n "${SSHOPTS}" ]; then
         SSH_OPTIONS="${SSH_OPTIONS} ${SSHOPTS}"
     fi
 
+    # Set the protocol version
     if [ ${SSHPROTO} -ne 1 ] && [ ${SSHPROTO} -ne 2 ] && [ ${SSHPROTO} -ne 99 ]; then
         # Idiots, we only want 1 or 2. Cant decide? Lets force 2.
         SSHPROTO=2
     fi
-
     if [ -n "${SSHPROTO}" ] && [ ${SSHPROTO} -ne 99 ]; then
         SSH_OPTIONS="${SSH_OPTIONS} -${SSHPROTO}"
     fi
@@ -69,64 +76,82 @@ signal () {
     date -u >> "${LOGDIR}/${MIRROR}.log"
 
     PUSHARGS=""
+    # Archive is non-empty, so tell the downstreams
     if [ -n "${PUSHARCHIVE}" ]; then
         PUSHARGS="${PUSHARGS} sync:archive:${PUSHARCHIVE}"
     fi
+    # We have a callback wish, tell downstreams
     if [ -n "${PUSHCB}" ]; then
         PUSHARGS="${PUSHARGS} sync:callback"
     fi
+    # If we are running an mhop push AND our downstream is one to receive it, tell it.
+    if [ "xmhopx" = "x${PUSHKIND}x" ] && [ "xmhopx" = "x${PUSHTYPE}x" ]; then
+        PUSHARGS="${PUSHARGS} sync:mhop"
+    fi
 
     if [ "xallx" = "x${PUSHTYPE}x" ]; then
-        # Default normal "fire and forget" push
+        # Default normal "fire and forget" push. We background that, we do not care about the mirrors doings
         echo "Sending normal push" >> "${LOGDIR}/${MIRROR}.log"
         PUSHARGS1="sync:all"
         ssh $SSH_OPTIONS "${HOSTNAME}" "${PUSHARGS} ${PUSHARGS1}" >>"${LOGDIR}/${MIRROR}.log" 2>&1 &
-    elif [ "xstagedx" = "x${PUSHTYPE}x" ]; then
-        # Want a staged push. Fine, lets do that
+    elif [ "xstagedx" = "x${PUSHTYPE}x" ] || [ "xmhopx" = "x${PUSHTYPE}x" ]; then
+        # Want a staged push. Fine, lets do that. Not backgrounded. We care about the mirrors doings.
         echo "Sending staged push" >> "${LOGDIR}/${MIRROR}.log"
 
-        # Step1: Do a push to only sync stage1, do not background
-        PUSHARGS1="sync:stage1"
-        ssh $SSH_OPTIONS "${HOSTNAME}" "${PUSHARGS} ${PUSHARGS1}" >>"${LOGDIR}/${MIRROR}.log" 2>&1
-        touch "${PUSHLOCKOWN}"
+        # Only send stage1 if we havent already send it. When called with stage2, we already did.
+        if [ "xstage2x" != "x${PUSHKIND}x" ]; then
+            # Step1: Do a push to only sync stage1, do not background
+            PUSHARGS1="sync:stage1"
+            ssh $SSH_OPTIONS "${HOSTNAME}" "${PUSHARGS} ${PUSHARGS1}" >>"${LOGDIR}/${MIRROR}.log" 2>&1
+            touch "${PUSHLOCKOWN}"
 
-        # Step2: Wait for all the other "lock"files to appear.
-        tries=0
-        # We do not wait forever
-        while [ ${tries} -lt ${PUSHDELAY} ]; do
-            total=0
-            found=0
-            for file in ${PUSHLOCKS}; do
-                total=$((total + 1))
-                if [ -f ${file} ]; then
-                    found=$((found + 1))
+            # Step2: Wait for all the other "lock"files to appear.
+            tries=0
+            # We do not wait forever
+            while [ ${tries} -lt ${PUSHDELAY} ]; do
+                total=0
+                found=0
+                for file in ${PUSHLOCKS}; do
+                    total=$((total + 1))
+                    if [ -f ${file} ]; then
+                        found=$((found + 1))
+                    fi
+                done
+                if [ ${total} -eq ${found} ] || [ -f "${LOCKDIR}/all_stage1" ]; then
+                    touch "${LOCKDIR}/all_stage1"
+                    break
                 fi
+                tries=$((tries + 5))
+                sleep 5
             done
-            if [ ${total} -eq ${found} ] || [ -f "${LOCKDIR}/all_stage1" ]; then
-                touch "${LOCKDIR}/all_stage1"
-                break
+            # In case we did not have all PUSHLOCKS and still continued, note it
+            # This is a little racy, especially if the other parts decide to do this
+            # at the same time, but it wont hurt more than a mail too much, so I don't care much
+            if [ ${tries} -ge ${PUSHDELAY} ]; then
+            echo "Failed to wait for all other mirrors. Failed ones are:" >> "${LOGDIR}/${MIRROR}.log"
+                for file in ${PUSHLOCKS}; do
+                    if [ ! -f ${file} ]; then
+                        echo "${file}" >> "${LOGDIR}/${MIRROR}.log"
+                        error "Missing Pushlockfile ${file} after waiting ${tries} second, continuing"
+                    fi
+                done
             fi
-            tries=$((tries + 5))
-            sleep 5
-        done
-        # In case we did not have all PUSHLOCKS and still continued, note it
-        # This is a little racy, especially if the other parts decide to do this
-        # at the same time, but it wont hurt more than a mail too much, so I don't care much
-        if [ ${tries} -ge ${PUSHDELAY} ]; then
-        echo "Failed to wait for all other mirrors. Failed ones are:" >> "${LOGDIR}/${MIRROR}.log"
-            for file in ${PUSHLOCKS}; do
-                if [ ! -f ${file} ]; then
-                    echo "${file}" >> "${LOGDIR}/${MIRROR}.log"
-                    error "Missing Pushlockfile ${file} after waiting ${tries} second, continuing"
-                fi
-            done
+            rm -f "${PUSHLOCKOWN}"
         fi
-        rm -f "${PUSHLOCKOWN}"
 
-        # Step3: It either timed out or we have all the "lock"files, sync stage2
-        PUSHARGS2="sync:stage2"
-        echo "Now doing the second stage push" >> "${LOGDIR}/${MIRROR}.log"
-        ssh $SSH_OPTIONS "${HOSTNAME}" "${PUSHARGS} ${PUSHARGS2}" >>"${LOGDIR}/${MIRROR}.log" 2>&1
+        # Step3: It either timed out or we have all the "lock"files, do the rest
+        # If we are doing mhop AND are called from ftpsync - we now exit.
+        # That way we notify our uplink that we and all our clients are done with their
+        # stage1. It can then finish its own, and if all our upstreams downlinks are done,
+        # it will send us stage2.
+        # If we are not doing mhop or are not called from ftpsync, we start stage2
+        if [ "xtruex" = "x${FROMFTPSYNC}x" ] && [ "xmhopx" = "x${PUSHKIND}x" ]; then
+            return
+        else
+            PUSHARGS2="sync:stage2"
+            echo "Now doing the second stage push" >> "${LOGDIR}/${MIRROR}.log"
+            ssh $SSH_OPTIONS "${HOSTNAME}" "${PUSHARGS} ${PUSHARGS2}" >>"${LOGDIR}/${MIRROR}.log" 2>&1
+        fi
     else
         # Can't decide? Then you get nothing.
         return
@@ -181,7 +206,7 @@ hook () {
 
 # Return the list of 2-stage mirrors.
 get2stage() {
-    egrep '^staged' "${MIRRORS}" | {
+    egrep '^(staged|mhop)' "${MIRRORS}" | {
         while read MTYPE MLNAME MHOSTNAME MUSER MPROTO MKEYFILE; do
             PUSHLOCKS="${LOCKDIR}/${MLNAME}.stage1 ${PUSHLOCKS}"
         done

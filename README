@@ -11,7 +11,7 @@ Currently the following scripts are available:
 
   * ftpsync     - Used to sync an archive using rsync
   * runmirrors  - Used to notify leaf nodes of available updates
-  * dircombine  - Internal script to manage the mirror user's $HOME 
+  * dircombine  - Internal script to manage the mirror user's $HOME
                   on debian.org machines
   * typicalsync - Generates a typical Debian mirror
   * udh         - We are lazy, just a shorthand to avoid typing the
@@ -23,14 +23,14 @@ For impatient people, short usage instruction:
 
  - Create a dedicated user for the whole mirror.
  - Create a seperate directory for the mirror, writeable by the new user.
- - Place the ftpsync script in the mirror user's $HOME/ (or $HOME/bin)
+ - Place the ftpsync script in the mirror user's $HOME/bin (or just $HOME)
  - Place the ftpsync.conf.sample into $HOME/etc as ftpsync.conf and edit
-   it to suit your system.  You should at the very least change the TO= 
+   it to suit your system.  You should at the very least change the TO=
    and RSYNC_HOST lines.
  - Create $HOME/log (or wherever you point $LOGDIR to)
  - Setup the .ssh/authorized_keys for the mirror user and place the public key of
    your upstream mirror into it. Preface it with
-no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty,command="~/bin/ftpsync",from="IPADDRESS" 
+no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty,command="~/bin/ftpsync",from="IPADDRESS"
    and replace $IPADDRESS with that of your upstream mirror.
  - You are finished
 
@@ -53,7 +53,7 @@ functionality:
 
  - Must perform a 2-stage sync
    The archive mirroring must be done in 2 stages. The first rsync run
-   must ignore the index files.  The correct exclude options for the 
+   must ignore the index files.  The correct exclude options for the
    first rsync run are:
   --exclude Packages* --exclude Sources* --exclude Release* --exclude ls-lR*
    The first stage must not delete any files.
@@ -76,7 +76,7 @@ functionality:
 
  - Should understand multi-stage pushes.
    The script should parse the arguments it gets via ssh, and if they
-   contain a hint to only sync stage1 or stage2, then ONLY those steps 
+   contain a hint to only sync stage1 or stage2, then ONLY those steps
    SHOULD be performed.
 
    Rationale: This enables us to coordinate the timing of the first
@@ -106,51 +106,67 @@ Some of the advantages of the new version are:
  - Support for multi-stage archive synchronisations
  - Support for hook scripts at various points
  - Support for multiple archives, even if they are pushed using one ssh key
+ - Support for multi-hop, multi-stage archive synchronisations
 
   Correct support for multiple pushes
   -----------------------------------
   When the script receives a second push while it is running and syncing
-  the archive it won't ignore it. Instead it will rerun the 
+  the archive it won't ignore it. Instead it will rerun the
   synchronisation step to ensure the archive is correctly synchronised.
-   
+
   Scripts that fail to do that risk ending up with an inconsistent archive.
-   
-   
+
+
   Can do multi-stage archive synchronisations
   -------------------------------------------
   The script can be told to only perform the first or second stage of the
-  archive synchronisation. 
-   
+  archive synchronisation.
+
   This enables us to send all the binary packages and sources to a
   number of mirrors, and then tell all of them to sync the
   Packages/Release files at once. This will keep the timeframe in which
   the mirrors are out of sync very small and will greatly help things like
   DNS RR entries or even the planned GeoDNS setup.
-   
-   
+
+
+  Multi-hop, multi-stage archive synchronisations
+  -----------------------------------------------
+  The script can be told to perform a multi-hop multi-stage archive
+  synchronisation.
+
+  This is basically the same as the multi-stage synchronisation
+  explained above, but enables the downstream mirror to push his own
+  staged/multi-hop downstreams before returning. This has the same
+  advantage than the multi-stage synchronisation but allows us to do
+  this over multiple level of mirrors. (Imagine one push going from
+  Europe to Australia, where then locally 3 others get updated before
+  stage2 is sent out. Instead of 4times transferring data from Europe to
+  Australia, just to have them all updated near instantly).
+
+
   Can run hook scripts
   --------------------
   ftpsync currently allows 5 hook scripts to run at various points of the
   mirror sync run.
-   
+
   Hook1: After lock is acquired, before first rsync
   Hook2: After first rsync, if successful
   Hook3: After second rsync, if successful
   Hook4: Right before leaf mirror triggering
   Hook5: After leaf mirror trigger (only if we have slave mirrors; HUB=true)
-   
+
   Note that Hook3 and Hook4 are likely to be called directly after each other.
   The difference is that Hook3 is called *every* time the second rsync
   succeeds even if the mirroring needs to re-run due to a second push.
   Hook4 is only executed if mirroring is completed.
-   
-   
+
+
   Support for multiple archives, even if they are pushed using one ssh key
   ------------------------------------------------------------------------
   If you get multiple archives from your upstream mirror (say Debian,
-  Debian-Backports and Volatile), previously you had to use 3 different ssh 
+  Debian-Backports and Volatile), previously you had to use 3 different ssh
   keys to be able to automagically synchronize them.  This script can do it
-  all with just one key, if your upstream mirror tells you which archive. 
+  all with just one key, if your upstream mirror tells you which archive.
   See "Commandline/SSH options" below for further details.
 
 
@@ -171,6 +187,7 @@ Option         Behaviour
 stage1         Only do stage1 sync
 stage2         Only do stage2 sync
 all            Do a complete sync (default)
+mhop           Do a multi-hop sync
 archive:foo    Sync archive foo (if the file $HOME/etc/ftpsync-foo.conf
                exists and is configured)
 callback       Call back when done (needs proper ssh setup for this to
@@ -223,9 +240,9 @@ as well as the newer multi-stage push.
 The normal push, as described above, will simply push the leaf node and
 then go on with the other nodes.
 
-The multi-staged push first pushes a mirror and tells it to only do a 
+The multi-staged push first pushes a mirror and tells it to only do a
 stage1 sync run. Then it waits for the mirror (and all others being pushed
-in the same run) to finish that run, before it tells all of the staged 
+in the same run) to finish that run, before it tells all of the staged
 mirrors to do the stage2 sync.
 
 This way you can do a nearly-simultaneous update of multiple hosts.
