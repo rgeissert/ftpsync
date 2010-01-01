@@ -128,7 +128,7 @@ signal () {
             # This is a little racy, especially if the other parts decide to do this
             # at the same time, but it wont hurt more than a mail too much, so I don't care much
             if [ ${tries} -ge ${PUSHDELAY} ]; then
-            echo "Failed to wait for all other mirrors. Failed ones are:" >> "${LOGDIR}/${MIRROR}.log"
+                echo "Failed to wait for all other mirrors. Failed ones are:" >> "${LOGDIR}/${MIRROR}.log"
                 for file in ${PUSHLOCKS}; do
                     if [ ! -f ${file} ]; then
                         echo "${file}" >> "${LOGDIR}/${MIRROR}.log"
