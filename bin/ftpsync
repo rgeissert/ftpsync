@@ -251,6 +251,8 @@ LOGROTATE=${LOGROTATE:-14}
 
 # Our lockfile
 LOCK=${LOCK:-"${TO}/Archive-Update-in-Progress-${MIRRORNAME}"}
+# timeout for the lockfile, in case we have bash older than v4 (and no /proc)
+LOCKTIMEOUT=${LOCKTIMEOUT:-3600}
 # Do we need another rsync run?
 UPDATEREQUIRED="${TO}/Archive-Update-Required-${MIRRORNAME}"
 # Trace file for mirror stats and checks (make sure we get full hostname)
@@ -337,8 +339,17 @@ HUB=${HUB:-"false"}
 function mainroutine() {
     if [ $BASH_SUBSHELL -gt 0 ]; then
         log "Mirrorrun is done backgrounded"
-        # Update our pid in our lockfile. Helps for the cases we go background
-        echo "${BASHPID}" > "${LOCK}"
+        # Old bash sucks, no easy way to get the PID of a backgrounded function
+        # So if thats true, dont update the pid. The script has to do other things
+        # to find out if we are still there.
+        if [ ${BASH_VERSINFO[0]} -gt 3 ]; then
+            # Update our pid in our lockfile. Helps for the cases we go background
+            echo "${BASHPID}" > "${LOCK}"
+        elif [ -L /proc/self ]; then
+            echo $(basename $(readlink -f /proc/self)) > "${LOCK}"
+        else
+            echo "$$" > "${LOCK}"
+        fi
     fi
     # Look who pushed us and note that in the log.
     log "Mirrorsync start"
@@ -531,13 +542,31 @@ touch "${UPDATEREQUIRED}"
 
 # Check to see if another sync is in progress
 if ! ( set -o noclobber; echo "$$" > "${LOCK}") 2> /dev/null; then
-	if ! $(kill -0 $(cat ${LOCK}) 2>/dev/null); then
-		# Process does either not exist or is not owned by us.
-		echo "$$" > "${LOCK}"
-	else
-		echo "Unable to start rsync, lock file still exists, PID $(cat ${LOCK})"
-		exit 1
-	fi
+    if [ ${BASH_VERSINFO[0]} -gt 3 ] || [ -L /proc/self ]; then
+        # We have a recent enough bash version, lets do it the easy way,
+        # the lock will contain the right pid, thanks to $BASHPID
+        if ! $(kill -0 $(cat ${LOCK}) 2>/dev/null); then
+            # Process does either not exist or is not owned by us.
+            echo "$$" > "${LOCK}"
+        else
+            echo "Unable to start rsync, lock file still exists, PID $(cat ${LOCK})"
+            exit 1
+        fi
+    else
+        # Old bash, means we dont have the right pid in our lockfile
+        # So take a different way - guess if it is still there by comparing its age.
+        # Not optimal, but hey.
+        stamptime=$(date --reference="${LOCK}" +%s)
+        unixtime=$(date +%s)
+        difference=$(( $unixtime - $stamptime ))
+        if [ ${difference} -ge ${LOCKTIMEOUT} ]; then
+            # Took longer than 60 minutes? Assume it broke and take the lock
+            echo "$$" > "${LOCK}"
+        else
+            echo "Unable to start rsync, lock file younger than one hour"
+            exit 1
+        fi
+    fi
 fi
 
 # When we exit normally we call cleanup on our own. Otherwise we want it called by
