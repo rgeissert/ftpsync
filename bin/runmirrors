@@ -69,7 +69,7 @@ if [ $# -gt 0 ]; then
                     ;;
 
                 *)  echo "Invalid usage"
-		            echo -e $HELP 
+                    echo -e $HELP 
                     exit 1
                     ;;
             esac
@@ -119,16 +119,16 @@ PUSHDELAY=${PUSHDELAY:-600}
 KEYFILE=${KEYFILE:-".ssh/pushmirror"}
 # where to send mails to
 if [ "x$(hostname -d)x" != "xdebian.orgx" ]; then
-	# We are not on a debian.org host
-	MAILTO=${MAILTO:-"root"}
+    # We are not on a debian.org host
+    MAILTO=${MAILTO:-"root"}
 else
-	# Yay, on a .debian.org host
-	MAILTO=${MAILTO:-"mirrorlogs@debian.org"}
+    # Yay, on a .debian.org host
+    MAILTO=${MAILTO:-"mirrorlogs@debian.org"}
 fi
 
 if ! [ -f "${BASEDIR}/${KEYFILE}" ]; then
-	error "SSH Key ${BASEDIR}/${KEYFILE} does not exist" >> ${LOG}
-	exit 5
+    error "SSH Key ${BASEDIR}/${KEYFILE} does not exist" >> ${LOG}
+    exit 5
 fi
 
 # Hooks
@@ -151,8 +151,8 @@ trap 'log "Mirrorpush done" >> ${LOG}; savelog "${LOG}" > /dev/null' EXIT
 log "Pushing leaf mirrors. Inside ftpsync: ${FROMFTPSYNC}. Pushkind: ${PUSHKIND}" >> ${LOG}
 
 HOOK=(
-	HOOKNR=1
-	HOOKSCR=${HOOK1}
+    HOOKNR=1
+    HOOKSCR=${HOOK1}
 )
 hook $HOOK
 
@@ -171,15 +171,15 @@ rm -f "${LOCKDIR}/all_stage1"
 # We use grep to easily sort out all lines having a # in front of them or are empty.
 egrep -v '^[[:space:]]*(#|$)' "${MIRRORS}" |
 while read MTYPE MLNAME MHOSTNAME MUSER MSSHOPT; do
-	if [ "x${MTYPE}x" = "xDELAYx" ]; then
-		# We should wait a bit.
-		if [ -z ${MLNAME} ]; then
-			MLNAME=600
-		fi
-		log "Delay of ${MLNAME} requested, sleeping" >> "${LOG}"
-		sleep ${MLNAME}
-		continue
-	fi
+    if [ "x${MTYPE}x" = "xDELAYx" ]; then
+        # We should wait a bit.
+        if [ -z ${MLNAME} ]; then
+            MLNAME=600
+        fi
+        log "Delay of ${MLNAME} requested, sleeping" >> "${LOG}"
+        sleep ${MLNAME}
+        continue
+    fi
 
     # If we are told we have a mhop sync to do and are called from within ftpsync,
     # we will only look at staged/mhop entries and ignore the rest.
@@ -223,36 +223,36 @@ while read MTYPE MLNAME MHOSTNAME MUSER MSSHOPT; do
         fi
     else
         MPROTO=2
-		MKEYFILE="${BASEDIR}/${KEYFILE}"
+        MKEYFILE="${BASEDIR}/${KEYFILE}"
         SSHOPT=""
     fi
 
-	# Built our array
-	SIGNAL_OPTS=(
-		MIRROR="${MLNAME}"
-		HOSTNAME="${MHOSTNAME}"
-		USERNAME="${MUSER}"
-		SSHPROTO="${MPROTO}"
-		SSHKEY="${MKEYFILE}"
-		SSHOPTS="${SSHOPT/ /#}"
-		PUSHLOCKOWN="${LOCKDIR}/${MLNAME}.stage1"
-		PUSHTYPE="${MTYPE}"
-		PUSHARCHIVE=${PUSHARCHIVE}
-		PUSHKIND=${PUSHKIND}
-		FROMFTPSYNC=${FROMFTPSYNC}
-	)
+    # Built our array
+    SIGNAL_OPTS=(
+        MIRROR="${MLNAME}"
+        HOSTNAME="${MHOSTNAME}"
+        USERNAME="${MUSER}"
+        SSHPROTO="${MPROTO}"
+        SSHKEY="${MKEYFILE}"
+        SSHOPTS="${SSHOPT/ /#}"
+        PUSHLOCKOWN="${LOCKDIR}/${MLNAME}.stage1"
+        PUSHTYPE="${MTYPE}"
+        PUSHARCHIVE=${PUSHARCHIVE}
+        PUSHKIND=${PUSHKIND}
+        FROMFTPSYNC=${FROMFTPSYNC}
+    )
 
-	# And finally, push the mirror
-	log "Trigger ${MLNAME}" >> ${LOG}
-	signal "${SIGNAL_OPTS}" &
-	log "Trigger for ${MLNAME} done" >> ${LOG}
+    # And finally, push the mirror
+    log "Trigger ${MLNAME}" >> ${LOG}
+    signal "${SIGNAL_OPTS}" &
+    log "Trigger for ${MLNAME} done" >> ${LOG}
 
-	HOOK=(
-		HOOKNR=2
-		HOOKSCR=${HOOK2}
-	)
-	hook $HOOK
-	set +e
+    HOOK=(
+        HOOKNR=2
+        HOOKSCR=${HOOK2}
+    )
+    hook $HOOK
+    set +e
 done
 
 # If we are run from within ftpsync *and* have an mhop push to send on, we have
@@ -278,8 +278,8 @@ if [ "xtruex" = "x${FROMFTPSYNC}x" ] && [ "xmhopx" = "x${PUSHKIND}x" ]; then
 fi
 
 HOOK=(
-	HOOKNR=3
-	HOOKSCR=${HOOK3}
+    HOOKNR=3
+    HOOKSCR=${HOOK3}
 )
 hook $HOOK
 

@@ -52,16 +52,16 @@ KEYFILE=${KEYFILE:-".ssh/pushpackages"}
 MIRRORPATH=${MIRRORPATH:-"/org/packages.debian.org/mirror/"}
 # where to send mails to
 if [ "x$(hostname -s)x" != "x${MIRRORNAME%%.debian.org}x" ]; then
-	# We are not on a debian.org host
-	MAILTO=${MAILTO:-"root"}
+    # We are not on a debian.org host
+    MAILTO=${MAILTO:-"root"}
 else
-	# Yay, on a .debian.org host
-	MAILTO=${MAILTO:-"mirrorlogs@debian.org"}
+    # Yay, on a .debian.org host
+    MAILTO=${MAILTO:-"mirrorlogs@debian.org"}
 fi
 
 if ! [ -f "${BASEDIR}/${KEYFILE}" ]; then
-	error "SSH Key ${BASEDIR}/${KEYFILE} does not exist" >> ${LOG}
-	exit 5
+    error "SSH Key ${BASEDIR}/${KEYFILE} does not exist" >> ${LOG}
+    exit 5
 fi
 
 # Some sane defaults
@@ -84,29 +84,29 @@ set +e
 # We use grep to easily sort out all lines having a # in front of them or are empty.
 egrep -v '^[[:space:]]*(#|$)' "${MIRRORS}" |
 while read MLNAME MHOSTNAME MUSER MPROTO MKEYFILE; do
-	# Process the two options that can be left blank in the config
-	if [ -z ${MPROTO} ]; then
-		MPROTO=2
-	fi
-	if [ -z ${MKEYFILE} ]; then
-		MKEYFILE="${BASEDIR}/${KEYFILE}"
-	fi
-	# Now, people can do stupid things and leave out the protocol, but
-	# define a keyfile...
-	if [ ${MPROTO} -ne 1 ] && [ ${MPROTO} -ne 2 ]; then
-		error "Need a correct ssh protocol version for ${MLNAME}, skipping" >> ${LOG}
-		continue
-	fi
+    # Process the two options that can be left blank in the config
+    if [ -z ${MPROTO} ]; then
+        MPROTO=2
+    fi
+    if [ -z ${MKEYFILE} ]; then
+        MKEYFILE="${BASEDIR}/${KEYFILE}"
+    fi
+    # Now, people can do stupid things and leave out the protocol, but
+    # define a keyfile...
+    if [ ${MPROTO} -ne 1 ] && [ ${MPROTO} -ne 2 ]; then
+        error "Need a correct ssh protocol version for ${MLNAME}, skipping" >> ${LOG}
+        continue
+    fi
 
-	# And finally, push the mirror
-	log "Pushing ${MLNAME}" >> ${LOG}
-	# This needs a limited ssh key on the other side, something like
-	# no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty,command="rsync --server -vlogDtpr . /srv/mirrors/packages.debian.org/",from="87.106.64.223,2001:8d8:80:11::35d,powell.debian.org" ssh-rsa.....
-	rsync -e "ssh -i ${MKEYFILE} -${MPROTO}" -av --stats  "${MIRRORPATH}"  ${MUSER}@${MHOSTNAME}:/does/not/matter >"${LOGDIR}/${MLNAME}.log"
-	log "Pushing ${MLNAME} done" >> ${LOG}
-	savelog ${LOGDIR}${MLNAME}.log
+    # And finally, push the mirror
+    log "Pushing ${MLNAME}" >> ${LOG}
+    # This needs a limited ssh key on the other side, something like
+    # no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty,command="rsync --server -vlogDtpr . /srv/mirrors/packages.debian.org/",from="87.106.64.223,2001:8d8:80:11::35d,powell.debian.org" ssh-rsa.....
+    rsync -e "ssh -i ${MKEYFILE} -${MPROTO}" -av --stats  "${MIRRORPATH}"  ${MUSER}@${MHOSTNAME}:/does/not/matter >"${LOGDIR}/${MLNAME}.log"
+    log "Pushing ${MLNAME} done" >> ${LOG}
+    savelog ${LOGDIR}${MLNAME}.log
 
-	set +e
+    set +e
 done
 
 exit 0

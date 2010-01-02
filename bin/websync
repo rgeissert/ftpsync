@@ -48,51 +48,51 @@ VERSION="0815"
 ########################################################################
 # All the stuff we want to do when we exit, no matter where
 cleanup() {
-	trap - ERR TERM HUP INT QUIT EXIT
-	# all done. Mail the log, exit.
-	log "Mirrorsync done";
-	if [ -n "${MAILTO}" ]; then
+    trap - ERR TERM HUP INT QUIT EXIT
+    # all done. Mail the log, exit.
+    log "Mirrorsync done";
+    if [ -n "${MAILTO}" ]; then
         # In case rsync had something on stderr
-		if [ -s "${LOGDIR}/rsync-${NAME}.error" ]; then
-			mail -e -s "[${PROGRAM}@$(hostname -s)] ($$) rsync ERROR on $(date +"%Y.%m.%d-%H:%M:%S")" ${MAILTO} < "${LOGDIR}/rsync-${NAME}.error"
-		fi
-		if [ "x${ERRORSONLY}x" = "xfalsex" ]; then
-			# And the normal log
-			MAILFILES="${LOG}"
-			if [ "x${FULLLOGS}x" = "xtruex" ]; then
-				# Someone wants full logs including rsync
-				MAILFILES="${MAILFILES} ${LOGDIR}/rsync-${NAME}.log"
-			fi
-			cat ${MAILFILES} | mail -e -s "[${PROGRAM}@$(hostname -s)] web sync finished on $(date +"%Y.%m.%d-%H:%M:%S")" ${MAILTO}
-		fi
-	fi
+        if [ -s "${LOGDIR}/rsync-${NAME}.error" ]; then
+            mail -e -s "[${PROGRAM}@$(hostname -s)] ($$) rsync ERROR on $(date +"%Y.%m.%d-%H:%M:%S")" ${MAILTO} < "${LOGDIR}/rsync-${NAME}.error"
+        fi
+        if [ "x${ERRORSONLY}x" = "xfalsex" ]; then
+            # And the normal log
+            MAILFILES="${LOG}"
+            if [ "x${FULLLOGS}x" = "xtruex" ]; then
+                # Someone wants full logs including rsync
+                MAILFILES="${MAILFILES} ${LOGDIR}/rsync-${NAME}.log"
+            fi
+            cat ${MAILFILES} | mail -e -s "[${PROGRAM}@$(hostname -s)] web sync finished on $(date +"%Y.%m.%d-%H:%M:%S")" ${MAILTO}
+        fi
+    fi
 
-	savelog "${LOGDIR}/rsync-${NAME}.log"
-	savelog "${LOGDIR}/rsync-${NAME}.error"
-	savelog "$LOG" > /dev/null
+    savelog "${LOGDIR}/rsync-${NAME}.log"
+    savelog "${LOGDIR}/rsync-${NAME}.error"
+    savelog "$LOG" > /dev/null
 
-	rm -f "${LOCK}"
+    rm -f "${LOCK}"
 }
 
 
 # Check rsyncs return value
 check_rsync() {
 
-	ret=$1
-	msg=$2
+    ret=$1
+    msg=$2
 
-	# 24 - vanished source files. Ignored, that should be the target of $UPDATEREQUIRED
-	# and us re-running. If it's not, uplink is broken anyways.
-	case "${ret}" in
-		0) return 0;;
-		24) return 0;;
-		23) return 2;;
-		30) return 2;;
-		*)
-			error "ERROR: ${msg}"
-			return 1
-			;;
-	esac
+    # 24 - vanished source files. Ignored, that should be the target of $UPDATEREQUIRED
+    # and us re-running. If it's not, uplink is broken anyways.
+    case "${ret}" in
+        0) return 0;;
+        24) return 0;;
+        23) return 2;;
+        30) return 2;;
+        *)
+            error "ERROR: ${msg}"
+            return 1
+            ;;
+    esac
 }
 
 ########################################################################
@@ -127,11 +127,11 @@ PROGRAM=${PROGRAM:-"${NAME}-$(hostname -s)"}
 
 # Where to send mails about mirroring to?
 if [ "x$(hostname -d)x" != "xdebian.orgx" ]; then
-	# We are not on a debian.org host
-	MAILTO=${MAILTO:-"root"}
+    # We are not on a debian.org host
+    MAILTO=${MAILTO:-"root"}
 else
-	# Yay, on a .debian.org host
-	MAILTO=${MAILTO:-"mirrorlogs@debian.org"}
+    # Yay, on a .debian.org host
+    MAILTO=${MAILTO:-"mirrorlogs@debian.org"}
 fi
 # Want errors only or every log?
 ERRORSONLY=${ERRORSONLY:-"true"}
@@ -205,13 +205,13 @@ touch "${UPDATEREQUIRED}"
 
 # Check to see if another sync is in progress
 if ! ( set -o noclobber; echo "$$" > "${LOCK}") 2> /dev/null; then
-	if ! $(kill -0 $(cat ${LOCK}) 2>/dev/null); then
-		# Process does either not exist or is not owned by us.
-		echo "$$" > "${LOCK}"
-	else
-		echo "Unable to start rsync, lock file still exists, PID $(cat ${LOCK})"
-		exit 1
-	fi
+    if ! $(kill -0 $(cat ${LOCK}) 2>/dev/null); then
+        # Process does either not exist or is not owned by us.
+        echo "$$" > "${LOCK}"
+    else
+        echo "Unable to start rsync, lock file still exists, PID $(cat ${LOCK})"
+        exit 1
+    fi
 fi
 
 trap cleanup EXIT ERR TERM HUP INT QUIT
@@ -223,22 +223,22 @@ exec >"$LOG" 2>&1 </dev/null
 log "Mirrorsync start"
 PUSHFROM="${SSH_CONNECTION%%\ *}"
 if [ -n "${PUSHFROM}" ]; then
-	log "We got pushed from ${PUSHFROM}"
+    log "We got pushed from ${PUSHFROM}"
 fi
 log "Acquired main lock"
 
 HOOK=(
-	HOOKNR=1
-	HOOKSCR=${HOOK1}
+    HOOKNR=1
+    HOOKSCR=${HOOK1}
 )
 hook $HOOK
 
 # Now, we might want to sync from anonymous too.
 # This is that deep in this script so hook1 could, if wanted, change things!
 if [ -z ${RSYNC_USER} ]; then
-	RSYNCPTH="${RSYNC_HOST}"
+    RSYNCPTH="${RSYNC_HOST}"
 else
-	RSYNCPTH="${RSYNC_USER}@${RSYNC_HOST}"
+    RSYNCPTH="${RSYNC_USER}@${RSYNC_HOST}"
 fi
 
 # Now do the actual mirroring, and run as long as we have an updaterequired file.
@@ -246,35 +246,35 @@ export RSYNC_PASSWORD
 export RSYNC_PROXY
 
 while [ -e "${UPDATEREQUIRED}" ]; do
-	log "Running mirrorsync, update is required, ${UPDATEREQUIRED} exists"
+    log "Running mirrorsync, update is required, ${UPDATEREQUIRED} exists"
 
-	rm -f "${UPDATEREQUIRED}"
-	log "Syncing: ${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS2} ${EXCLUDE} ${SITE_FILTER}  ${RSYNCPTH}::${RSYNC_PATH} ${TO}"
+    rm -f "${UPDATEREQUIRED}"
+    log "Syncing: ${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS2} ${EXCLUDE} ${SITE_FILTER}  ${RSYNCPTH}::${RSYNC_PATH} ${TO}"
 
-	set +e
-	${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS2} ${EXCLUDE} ${SITE_FILTER} \
-		${RSYNCPTH}::${RSYNC_PATH} "${TO}" >"${LOGDIR}/rsync-${NAME}.log" 2>"${LOGDIR}/rsync-${NAME}.error"
-	result=$?
-	set -e
+    set +e
+    ${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS2} ${EXCLUDE} ${SITE_FILTER} \
+        ${RSYNCPTH}::${RSYNC_PATH} "${TO}" >"${LOGDIR}/rsync-${NAME}.log" 2>"${LOGDIR}/rsync-${NAME}.error"
+    result=$?
+    set -e
 
-	log "Back from rsync with returncode ${result}"
+    log "Back from rsync with returncode ${result}"
 
-	set +e
-	check_rsync $result "Sync went wrong, got errorcode ${result}. Logfile: ${LOG}"
-	GO=$?
-	set -e
+    set +e
+    check_rsync $result "Sync went wrong, got errorcode ${result}. Logfile: ${LOG}"
+    GO=$?
+    set -e
 
-	if [ ${GO} -eq 2 ] && [ -e "${UPDATEREQUIRED}" ]; then
-		log "We got error ${result} from rsync, but a second push went in hence ignoring this error for now"
-	elif [ ${GO} -ne 0 ]; then
-		exit 3
-	fi
+    if [ ${GO} -eq 2 ] && [ -e "${UPDATEREQUIRED}" ]; then
+        log "We got error ${result} from rsync, but a second push went in hence ignoring this error for now"
+    elif [ ${GO} -ne 0 ]; then
+        exit 3
+    fi
 
-	HOOK=(
-		HOOKNR=2
-		HOOKSCR=${HOOK2}
-	)
-	hook $HOOK
+    HOOK=(
+        HOOKNR=2
+        HOOKSCR=${HOOK2}
+    )
+    hook $HOOK
 
 done
 
@@ -284,21 +284,21 @@ echo "Used websync version: ${VERSION}" >> "${TO}/${TRACE}"
 echo "Running on host: $(hostname -f)" >> "${TO}/${TRACE}"
 
 HOOK=(
-	HOOKNR=3
-	HOOKSCR=${HOOK3}
+    HOOKNR=3
+    HOOKSCR=${HOOK3}
 )
 hook $HOOK
 
 if [ x${HUB} = "xtrue" ]; then
-	log "Trigger slave mirrors"
-	${BASEDIR}/bin/runmirrors "websync"
-	log "Trigger slave done"
+    log "Trigger slave mirrors"
+    ${BASEDIR}/bin/runmirrors "websync"
+    log "Trigger slave done"
 
-	HOOK=(
-		HOOKNR=4
-		HOOKSCR=${HOOK4}
-	)
-	hook $HOOK
+    HOOK=(
+        HOOKNR=4
+        HOOKSCR=${HOOK4}
+    )
+    hook $HOOK
 fi
 
 # All done, rest is done by cleanup hook.
