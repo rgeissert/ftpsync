@@ -106,6 +106,21 @@ cleanup() {
 	trap - ERR TERM HUP INT QUIT EXIT
 	# all done. Mail the log, exit.
 	log "Mirrorsync done";
+
+    # Lets get a statistical value
+    SPEED=$(
+        SPEEDLINE=$(egrep '[0-9.]+ bytes/sec' ${LOGDIR}/rsync-${NAME}.log)
+        set "nothing" ${SPEEDLINE}
+        echo $8
+    )
+    if [ -n "${SPEED}" ]; then
+        SPEED=${SPEED%%.*}
+        SPEED=$(( $SPEED / 1024 ))
+    else
+        SPEED='unknown'
+    fi
+    log "Rsync transfer speed: ${SPEED} KB/s"
+
 	if [ -n "${MAILTO}" ]; then
         # In case rsync had something on stderr
 		if [ -s "${LOGDIR}/rsync-${NAME}.error" ]; then
