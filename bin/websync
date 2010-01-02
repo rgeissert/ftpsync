@@ -278,11 +278,10 @@ while [ -e "${UPDATEREQUIRED}" ]; do
 
 done
 
-if [ -d "`dirname "${TO}/${TRACE}"`" ]; then
-      LC_ALL=POSIX LANG=POSIX date -u > "${TO}/${TRACE}"
-      echo "Used websync version: ${VERSION}" >> "${TO}/${TRACE}"
-	  echo "Running on host: $(hostname -f)" >> "${TO}/${TRACE}"
-fi
+mkdir -p "${TO}/.project/trace"
+LC_ALL=POSIX LANG=POSIX date -u > "${TO}/${TRACE}"
+echo "Used websync version: ${VERSION}" >> "${TO}/${TRACE}"
+echo "Running on host: $(hostname -f)" >> "${TO}/${TRACE}"
 
 HOOK=(
 	HOOKNR=3
