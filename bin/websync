@@ -154,7 +154,7 @@ RSYNC=${RSYNC:-rsync}
 # excluded files
 RSYNC_FILTER=${RSYNC_FILTER:-"--filter=protect_Website-Update-in-Progress-${MIRRORNAME} --filter=protect_${TRACE} --filter=protect_Website-Update-Required-${MIRRORNAME}"}
 # Default rsync options for *every* rsync call
-RSYNC_OPTIONS=${RSYNC_OPTIONS:-"-rltvHSB8192 --timeout 3600 --stats ${RSYNC_FILTER}"}
+RSYNC_OPTIONS=${RSYNC_OPTIONS:-"-prltvHSB8192 --timeout 3600 --stats ${RSYNC_FILTER}"}
 RSYNC_OPTIONS2=${RSYNC_OPTIONS2:-"--max-delete=40000 --delay-updates --delete --delete-after --delete-excluded"}
 # Which rsync share to use on our upstream mirror?
 RSYNC_PATH=${RSYNC_PATH:-"web.debian.org"}

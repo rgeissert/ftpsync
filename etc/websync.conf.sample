@@ -92,7 +92,7 @@
 ## BE VERY CAREFUL WHEN YOU CHANGE THE RSYNC_OPTIONS! BETTER DON'T!
 
 ## Default rsync options every rsync invocation sees.
-#RSYNC_OPTIONS="-rltvHSB8192 --timeout 3600 --stats --exclude Archive-Update-in-Progress-${MIRRORNAME} --exclude ${TRACE} --exclude Archive-Update-Required-${MIRRORNAME}"
+#RSYNC_OPTIONS="-prltvHSB8192 --timeout 3600 --stats --exclude Archive-Update-in-Progress-${MIRRORNAME} --exclude ${TRACE} --exclude Archive-Update-Required-${MIRRORNAME}"
 
 ## Default rsync options
 #RSYNC_OPTIONS2=${RSYNC_OPTIONS2:-"--max-delete=40000 --delay-updates --delete --delete-after --delete-excluded"}
