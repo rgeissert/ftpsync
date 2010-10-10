@@ -76,10 +76,11 @@ signal () {
     date -u >> "${LOGDIR}/${MIRROR}.log"
 
     PUSHARGS=""
-    # Archive is non-empty, so tell the downstreams
-    if [ -n "${PUSHARCHIVE}" ]; then
-        PUSHARGS="${PUSHARGS} sync:archive:${PUSHARCHIVE}"
-    fi
+    # PUSHARCHIVE empty or not, we always add the sync:archive: command to transfer.
+    # Otherwise, if nothing else is added, ssh -f would not work ("no command to execute")
+    # But ftpsync does treat "sync:archive:" as the main archive, so this works nicely.
+    PUSHARGS="${PUSHARGS} sync:archive:${PUSHARCHIVE}"
+
     # We have a callback wish, tell downstreams
     if [ -n "${PUSHCB}" ]; then
         PUSHARGS="${PUSHARGS} sync:callback"
