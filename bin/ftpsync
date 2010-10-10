@@ -354,193 +354,6 @@ HUB=${HUB:-"false"}
 ########################################################################
 # Really nothing to see below here. Only code follows.                 #
 ########################################################################
-# A function for the majority of the work. This function *CAN* run backgrounded.
-# It will be when we simply sync all. Staged syncs will not background, of course.
-function mainroutine() {
-    if [ $BASH_SUBSHELL -gt 0 ]; then
-        log "Mirrorrun is done backgrounded"
-        # Old bash sucks, no easy way to get the PID of a backgrounded function
-        # So if thats true, dont update the pid. The script has to do other things
-        # to find out if we are still there.
-        if [ ${BASH_VERSINFO[0]} -gt 3 ]; then
-            # Update our pid in our lockfile. Helps for the cases we go background
-            echo "${BASHPID}" > "${LOCK}"
-        elif [ -L /proc/self ]; then
-            echo $(basename $(readlink -f /proc/self)) > "${LOCK}"
-        else
-            echo "$$" > "${LOCK}"
-        fi
-    fi
-    # Look who pushed us and note that in the log.
-    log "Mirrorsync start"
-    PUSHFROM="${SSH_CONNECTION%%\ *}"
-    if [ -n "${PUSHFROM}" ]; then
-        log "We got pushed from ${PUSHFROM}"
-    fi
-    log "Acquired main lock"
-
-    if [ "xtruex" = "x${SYNCCALLBACK}x" ]; then
-        if [ "xnonex" = "x${CALLBACKHOST}x" ] || [ "xnonex" = "x${CALLBACKKEY}x" ]; then
-            SYNCCALLBACK="false"
-            error "We are asked to call back, but we do not know where to and do not have a key, ignoring callback"
-        fi
-    fi
-
-    HOOK=(
-        HOOKNR=1
-        HOOKSCR=${HOOK1}
-    )
-    hook $HOOK
-
-    # Now, we might want to sync from anonymous too.
-    # This is that deep in this script so hook1 could, if wanted, change things!
-    if [ -z ${RSYNC_USER} ]; then
-        RSYNCPTH="${RSYNC_HOST}"
-    else
-        RSYNCPTH="${RSYNC_USER}@${RSYNC_HOST}"
-    fi
-
-    # Now do the actual mirroring, and run as long as we have an updaterequired file.
-    export RSYNC_PASSWORD
-    export RSYNC_PROXY
-
-    while [ -e "${UPDATEREQUIRED}" ]; do
-        log "Running mirrorsync, update is required, ${UPDATEREQUIRED} exists"
-
-        # if we want stage1 *or* all
-        if [ "xtruex" = "x${SYNCSTAGE1}x" ] || [ "xtruex" = "x${SYNCALL}x" ]; then
-            while [ -e "${UPDATEREQUIRED}" ]; do
-                rm -f "${UPDATEREQUIRED}"
-                log "Running stage1: ${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS1} ${EXCLUDE} ${SOURCE_EXCLUDE}  ${RSYNCPTH}::${RSYNC_PATH} ${TO}"
-
-                set +e
-                # Step one, sync everything except Packages/Releases
-                ${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS1} ${EXCLUDE} ${SOURCE_EXCLUDE} \
-                    ${RSYNCPTH}::${RSYNC_PATH} "${TO}" >"${LOGDIR}/rsync-${NAME}.log" 2>"${LOGDIR}/rsync-${NAME}.error"
-                result=$?
-                set -e
-
-                log "Back from rsync with returncode ${result}"
-            done
-        else
-            # Fake a good resultcode
-            result=0
-        fi # Sync stage 1?
-        rm -f "${UPDATEREQUIRED}"
-
-        set +e
-        check_rsync $result "Sync step 1 went wrong, got errorcode ${result}. Logfile: ${LOG}"
-        GO=$?
-        set -e
-        if [ ${GO} -eq 2 ] && [ -e "${UPDATEREQUIRED}" ]; then
-            log "We got error ${result} from rsync, but a second push went in hence ignoring this error for now"
-        elif [ ${GO} -ne 0 ]; then
-            exit 3
-        fi
-
-        HOOK=(
-            HOOKNR=2
-            HOOKSCR=${HOOK2}
-        )
-        hook $HOOK
-
-        # if we want stage2 *or* all
-        if [ "xtruex" = "x${SYNCSTAGE2}x" ] || [ "xtruex" = "x${SYNCALL}x" ]; then
-            log "Running stage2: ${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS2} ${EXCLUDE} ${SOURCE_EXCLUDE} ${RSYNCPTH}::${RSYNC_PATH} ${TO}"
-
-            set +e
-            # We are lucky, it worked. Now do step 2 and sync again, this time including
-            # the packages/releases files
-            ${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS2} ${EXCLUDE} ${SOURCE_EXCLUDE} \
-                ${RSYNCPTH}::${RSYNC_PATH} "${TO}" >>${LOGDIR}/rsync-${NAME}.log 2>>${LOGDIR}/rsync-${NAME}.error
-            result=$?
-            set -e
-
-            log "Back from rsync with returncode ${result}"
-        else
-            # Fake a good resultcode
-            result=0
-        fi # Sync stage 2?
-
-        set +e
-        check_rsync $result "Sync step 2 went wrong, got errorcode ${result}. Logfile: ${LOG}"
-        GO=$?
-        set -e
-        if [ ${GO} -eq 2 ] && [ -e "${UPDATEREQUIRED}" ]; then
-            log "We got error ${result} from rsync, but a second push went in hence ignoring this error for now"
-        elif [ ${GO} -ne 0 ]; then
-            exit 4
-        fi
-
-        HOOK=(
-            HOOKNR=3
-            HOOKSCR=${HOOK3}
-        )
-        hook $HOOK
-    done
-
-    # We only update our tracefile when we had a stage2 or an all sync.
-    # Otherwise we would update it after stage1 already, which is wrong.
-    if [ "xtruex" = "x${SYNCSTAGE2}x" ] || [ "xtruex" = "x${SYNCALL}x" ]; then
-        if [ -d "`dirname "${TO}/${TRACE}"`" ]; then
-            LC_ALL=POSIX LANG=POSIX date -u > "${TO}/${TRACE}"
-            echo "Used ftpsync version: ${VERSION}" >> "${TO}/${TRACE}"
-            echo "Running on host: $(hostname -f)" >> "${TO}/${TRACE}"
-        fi
-    fi
-
-    HOOK=(
-        HOOKNR=4
-        HOOKSCR=${HOOK4}
-    )
-    hook $HOOK
-
-    if [ "xtruex" = "x${SYNCCALLBACK}x" ]; then
-        set +e
-        callback ${CALLBACKUSER} ${CALLBACKHOST} "${CALLBACKKEY}"
-        set -e
-    fi
-
-    # Remove the Archive-Update-in-Progress file before we push our downstreams.
-    rm -f "${LOCK}"
-
-    if [ x${HUB} = "xtrue" ]; then
-        # Trigger slave mirrors if we had a push for stage2 or all, or if its mhop
-        if [ "xtruex" = "x${SYNCSTAGE2}x" ] || [ "xtruex" = "x${SYNCALL}x" ] || [ "xtruex" = "x${SYNCMHOP}x" ]; then
-            RUNMIRRORARGS=""
-            if [ -n "${ARCHIVE}" ]; then
-                # We tell runmirrors about the archive we are running on.
-                RUNMIRRORARGS="-a ${ARCHIVE}"
-            fi
-            # We also tell runmirrors that we are running it from within ftpsync, so it can change
-            # the way it works with mhop based on that.
-            RUNMIRRORARGS="${RUNMIRRORARGS} -f"
-
-            if [ "xtruex" = "x${SYNCSTAGE1}x" ]; then
-                # This is true when we have a mhop sync. A normal multi-stage push sending stage1 will
-                # not get to this point.
-                # So if that happens, tell runmirrors we are doing mhop
-                RUNMIRRORARGS="${RUNMIRRORARGS} -k mhop"
-            elif [ "xtruex" = "x${SYNCSTAGE2}x" ]; then
-                RUNMIRRORARGS="${RUNMIRRORARGS} -k stage2"
-            elif [ "xtruex" = "x${SYNCALL}x" ]; then
-                RUNMIRRORARGS="${RUNMIRRORARGS} -k all"
-            fi
-            log "Trigger slave mirrors using ${RUNMIRRORARGS}"
-            ${BASEDIR}/bin/runmirrors ${RUNMIRRORARGS}
-            log "Trigger slave done"
-
-            HOOK=(
-                HOOKNR=5
-                HOOKSCR=${HOOK5}
-            )
-            hook $HOOK
-        fi
-    fi
-
-    # All done, lets call cleanup
-    cleanup
-}
 ########################################################################
 
 # Some sane defaults
@@ -597,19 +410,172 @@ trap cleanup ERR TERM HUP INT QUIT
 
 # Start log by redirecting everything there.
 exec >"$LOG" 2>&1 </dev/null
+log "Mirrorsync start"
 
-# All the rest of the action can be backgrounded (when we do not need to wait,
-# like for staged pushed). So have a function and call it here, depending on
-# the way we are called
-
-if [ "xtruex" = "x${SYNCALL}x" ]; then
-    # We have a simple normal mirror run, not staged. Lets background it.
-    mainroutine &
-    # Wait 2 seconds before we exit, then the ${LOCK} for sure has the pid
-    # of the mainroutine in it
-    sleep 2
-else
-    # Staged run, we have to wait until we are done before we exit, uplink
-    # is using that for synchronisation
-    mainroutine
+# Look who pushed us and note that in the log.
+PUSHFROM="${SSH_CONNECTION%%\ *}"
+if [ -n "${PUSHFROM}" ]; then
+    log "We got pushed from ${PUSHFROM}"
 fi
+
+if [ "xtruex" = "x${SYNCCALLBACK}x" ]; then
+    if [ "xnonex" = "x${CALLBACKHOST}x" ] || [ "xnonex" = "x${CALLBACKKEY}x" ]; then
+        SYNCCALLBACK="false"
+        error "We are asked to call back, but we do not know where to and do not have a key, ignoring callback"
+    fi
+fi
+
+HOOK=(
+    HOOKNR=1
+    HOOKSCR=${HOOK1}
+)
+hook $HOOK
+
+# Now, we might want to sync from anonymous too.
+# This is that deep in this script so hook1 could, if wanted, change things!
+if [ -z ${RSYNC_USER} ]; then
+    RSYNCPTH="${RSYNC_HOST}"
+else
+    RSYNCPTH="${RSYNC_USER}@${RSYNC_HOST}"
+fi
+
+# Now do the actual mirroring, and run as long as we have an updaterequired file.
+export RSYNC_PASSWORD
+export RSYNC_PROXY
+
+while [ -e "${UPDATEREQUIRED}" ]; do
+    log "Running mirrorsync, update is required, ${UPDATEREQUIRED} exists"
+
+    # if we want stage1 *or* all
+    if [ "xtruex" = "x${SYNCSTAGE1}x" ] || [ "xtruex" = "x${SYNCALL}x" ]; then
+        while [ -e "${UPDATEREQUIRED}" ]; do
+            rm -f "${UPDATEREQUIRED}"
+            log "Running stage1: ${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS1} ${EXCLUDE} ${SOURCE_EXCLUDE}  ${RSYNCPTH}::${RSYNC_PATH} ${TO}"
+
+            set +e
+            # Step one, sync everything except Packages/Releases
+            ${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS1} ${EXCLUDE} ${SOURCE_EXCLUDE} \
+                ${RSYNCPTH}::${RSYNC_PATH} "${TO}" >"${LOGDIR}/rsync-${NAME}.log" 2>"${LOGDIR}/rsync-${NAME}.error"
+            result=$?
+            set -e
+
+            log "Back from rsync with returncode ${result}"
+        done
+    else
+        # Fake a good resultcode
+        result=0
+    fi # Sync stage 1?
+    rm -f "${UPDATEREQUIRED}"
+
+    set +e
+    check_rsync $result "Sync step 1 went wrong, got errorcode ${result}. Logfile: ${LOG}"
+    GO=$?
+    set -e
+    if [ ${GO} -eq 2 ] && [ -e "${UPDATEREQUIRED}" ]; then
+        log "We got error ${result} from rsync, but a second push went in hence ignoring this error for now"
+    elif [ ${GO} -ne 0 ]; then
+        exit 3
+    fi
+
+    HOOK=(
+        HOOKNR=2
+        HOOKSCR=${HOOK2}
+    )
+    hook $HOOK
+
+    # if we want stage2 *or* all
+    if [ "xtruex" = "x${SYNCSTAGE2}x" ] || [ "xtruex" = "x${SYNCALL}x" ]; then
+        log "Running stage2: ${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS2} ${EXCLUDE} ${SOURCE_EXCLUDE} ${RSYNCPTH}::${RSYNC_PATH} ${TO}"
+
+        set +e
+        # We are lucky, it worked. Now do step 2 and sync again, this time including
+        # the packages/releases files
+        ${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS2} ${EXCLUDE} ${SOURCE_EXCLUDE} \
+            ${RSYNCPTH}::${RSYNC_PATH} "${TO}" >>${LOGDIR}/rsync-${NAME}.log 2>>${LOGDIR}/rsync-${NAME}.error
+        result=$?
+        set -e
+
+        log "Back from rsync with returncode ${result}"
+    else
+        # Fake a good resultcode
+        result=0
+    fi # Sync stage 2?
+
+    set +e
+    check_rsync $result "Sync step 2 went wrong, got errorcode ${result}. Logfile: ${LOG}"
+    GO=$?
+    set -e
+    if [ ${GO} -eq 2 ] && [ -e "${UPDATEREQUIRED}" ]; then
+        log "We got error ${result} from rsync, but a second push went in hence ignoring this error for now"
+    elif [ ${GO} -ne 0 ]; then
+        exit 4
+    fi
+
+    HOOK=(
+        HOOKNR=3
+        HOOKSCR=${HOOK3}
+    )
+    hook $HOOK
+done
+
+# We only update our tracefile when we had a stage2 or an all sync.
+# Otherwise we would update it after stage1 already, which is wrong.
+if [ "xtruex" = "x${SYNCSTAGE2}x" ] || [ "xtruex" = "x${SYNCALL}x" ]; then
+    if [ -d "`dirname "${TO}/${TRACE}"`" ]; then
+        LC_ALL=POSIX LANG=POSIX date -u > "${TO}/${TRACE}"
+        echo "Used ftpsync version: ${VERSION}" >> "${TO}/${TRACE}"
+        echo "Running on host: $(hostname -f)" >> "${TO}/${TRACE}"
+    fi
+fi
+
+HOOK=(
+    HOOKNR=4
+    HOOKSCR=${HOOK4}
+)
+hook $HOOK
+
+if [ "xtruex" = "x${SYNCCALLBACK}x" ]; then
+    set +e
+    callback ${CALLBACKUSER} ${CALLBACKHOST} "${CALLBACKKEY}"
+    set -e
+fi
+
+# Remove the Archive-Update-in-Progress file before we push our downstreams.
+rm -f "${LOCK}"
+
+if [ x${HUB} = "xtrue" ]; then
+    # Trigger slave mirrors if we had a push for stage2 or all, or if its mhop
+    if [ "xtruex" = "x${SYNCSTAGE2}x" ] || [ "xtruex" = "x${SYNCALL}x" ] || [ "xtruex" = "x${SYNCMHOP}x" ]; then
+        RUNMIRRORARGS=""
+        if [ -n "${ARCHIVE}" ]; then
+            # We tell runmirrors about the archive we are running on.
+            RUNMIRRORARGS="-a ${ARCHIVE}"
+        fi
+        # We also tell runmirrors that we are running it from within ftpsync, so it can change
+        # the way it works with mhop based on that.
+        RUNMIRRORARGS="${RUNMIRRORARGS} -f"
+
+        if [ "xtruex" = "x${SYNCSTAGE1}x" ]; then
+            # This is true when we have a mhop sync. A normal multi-stage push sending stage1 will
+            # not get to this point.
+            # So if that happens, tell runmirrors we are doing mhop
+            RUNMIRRORARGS="${RUNMIRRORARGS} -k mhop"
+        elif [ "xtruex" = "x${SYNCSTAGE2}x" ]; then
+            RUNMIRRORARGS="${RUNMIRRORARGS} -k stage2"
+        elif [ "xtruex" = "x${SYNCALL}x" ]; then
+            RUNMIRRORARGS="${RUNMIRRORARGS} -k all"
+        fi
+        log "Trigger slave mirrors using ${RUNMIRRORARGS}"
+        ${BASEDIR}/bin/runmirrors ${RUNMIRRORARGS}
+        log "Trigger slave done"
+
+        HOOK=(
+            HOOKNR=5
+            HOOKSCR=${HOOK5}
+        )
+        hook $HOOK
+    fi
+fi
+
+# All done, lets call cleanup
+cleanup
