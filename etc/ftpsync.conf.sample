@@ -61,7 +61,7 @@
 ## Use as space seperated list.
 ## Possible values are:
 ## alpha, amd64, arm, armel, hppa, hurd-i386, i386, ia64, kfreebsd-amd64,
-## kfreebsd-i386, m68k, mipsel, mips, powerpc, s390, sh and sparc
+## kfreebsd-i386, m68k, mipsel, mips, powerpc, s390, sh, sparc and source
 ## eg. ARCH_EXCLUDE="alpha arm armel mipsel mips s390 sparc"
 ## An unset value will mirror all architectures (default!)
 #ARCH_EXCLUDE=""
@@ -100,6 +100,9 @@
 ## BE VERY CAREFUL WHEN YOU CHANGE THE RSYNC_OPTIONS! BETTER DON'T!
 ## BE VERY CAREFUL WHEN YOU CHANGE THE RSYNC_OPTIONS! BETTER DON'T!
 ## BE VERY CAREFUL WHEN YOU CHANGE THE RSYNC_OPTIONS! BETTER DON'T!
+
+## limit I/O bandwidth. Value is KBytes per second, unset or 0 means unlimited
+#RSYNC_BW=""
 
 ## Default rsync options every rsync invocation sees.
 #RSYNC_OPTIONS="-prltvHSB8192 --timeout 3600 --stats --exclude Archive-Update-in-Progress-${MIRRORNAME} --exclude ${TRACE} --exclude Archive-Update-Required-${MIRRORNAME}"

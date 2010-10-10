@@ -12,7 +12,7 @@ set -E
 # Based losely on a number of existing scripts, written by an
 # unknown number of different people over the years.
 #
-# Copyright (C) 2008,2009 Joerg Jaspert <joerg@debian.org>
+# Copyright (C) 2008,2009,2010 Joerg Jaspert <joerg@debian.org>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -277,6 +277,8 @@ RSYNC=${RSYNC:-rsync}
 # Rsync filter rules. Used to protect various files we always want to keep, even if we otherwise delete
 # excluded files
 RSYNC_FILTER=${RSYNC_FILTER:-"--filter=protect_Archive-Update-in-Progress-${MIRRORNAME} --filter=protect_${TRACE} --filter=protect_Archive-Update-Required-${MIRRORNAME}"}
+# limit I/O bandwidth. Value is KBytes per second, unset or 0 is unlimited
+RSYNC_BW=${RSYNC_BW:-0}
 # Default rsync options for *every* rsync call
 RSYNC_OPTIONS=${RSYNC_OPTIONS:-"-prltvHSB8192 --timeout 3600 --stats ${RSYNC_FILTER}"}
 # Options we only use in the first pass, where we do not want packages/sources to fly in yet and dont want to delete files
@@ -285,6 +287,10 @@ RSYNC_OPTIONS1=${RSYNC_OPTIONS1:-"--exclude Packages* --exclude Sources* --exclu
 RSYNC_OPTIONS2=${RSYNC_OPTIONS2:-"--max-delete=40000 --delay-updates --delete --delete-after --delete-excluded"}
 # Which rsync share to use on our upstream mirror?
 RSYNC_PATH=${RSYNC_PATH:-"ftp"}
+
+# Now add the bwlimit option. As default is 0 we always add it, rsync interprets
+# 0 as unlimited, so this is safe.
+RSYNC_OPTIONS="--bwlimit=${RSYNC_BW} ${RSYNC_OPTIONS}"
 
 # We have no default host to sync from, but will error out if its unset
 RSYNC_HOST=${RSYNC_HOST:-""}
