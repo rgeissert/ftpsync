@@ -408,8 +408,8 @@ fi
 # run!)
 trap cleanup ERR TERM HUP INT QUIT
 
-# Start log by redirecting everything there.
-exec >"$LOG" 2>&1 </dev/null
+# Start log by redirecting stdout and stderr there and closing stdin
+exec >"$LOG" 2>&1 <&-
 log "Mirrorsync start"
 
 # Look who pushed us and note that in the log.
