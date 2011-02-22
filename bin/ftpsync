@@ -12,7 +12,7 @@ set -E
 # Based losely on a number of existing scripts, written by an
 # unknown number of different people over the years.
 #
-# Copyright (C) 2008,2009,2010 Joerg Jaspert <joerg@debian.org>
+# Copyright (C) 2008,2009,2010,2011 Joerg Jaspert <joerg@debian.org>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -108,16 +108,17 @@ cleanup() {
     log "Mirrorsync done";
 
     # Lets get a statistical value
-    SPEED=$(
-        SPEEDLINE=$(egrep '[0-9.]+ bytes/sec' ${LOGDIR}/rsync-${NAME}.log)
-        set "nothing" ${SPEEDLINE}
-        echo $8
-    )
-    if [ -n "${SPEED}" ]; then
-        SPEED=${SPEED%%.*}
-        SPEED=$(( $SPEED / 1024 ))
-    else
-        SPEED='unknown'
+    SPEED="unknown"
+    if [ -f "${LOGDIR}/rsync-${NAME}.log" ]; then
+        SPEED=$(
+            SPEEDLINE=$(egrep '[0-9.]+ bytes/sec' "${LOGDIR}/rsync-${NAME}.log")
+            set "nothing" ${SPEEDLINE}
+            echo $8
+        )
+        if [ -n "${SPEED}" ]; then
+            SPEED=${SPEED%%.*}
+            SPEED=$(( $SPEED / 1024 ))
+        fi
     fi
     log "Rsync transfer speed: ${SPEED} KB/s"
 
