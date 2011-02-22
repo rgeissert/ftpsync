@@ -127,7 +127,7 @@ else
 fi
 
 if ! [ -f "${BASEDIR}/${KEYFILE}" ]; then
-    error "SSH Key ${BASEDIR}/${KEYFILE} does not exist" >> ${LOG}
+    error "SSH Key ${BASEDIR}/${KEYFILE} does not exist" >> "${LOG}"
     exit 5
 fi
 
@@ -139,16 +139,16 @@ HOOK3=${HOOK3:-""}
 ########################################################################
 
 # Some sane defaults
-cd ${BASEDIR}
+cd "${BASEDIR}"
 umask 022
 
 # Make sure we have our log and lock directories
 mkdir -p "${LOGDIR}"
 mkdir -p "${LOCKDIR}"
 
-trap 'log "Mirrorpush done" >> ${LOG}; savelog "${LOG}" > /dev/null' EXIT
+trap 'log "Mirrorpush done" >> "${LOG}"; savelog "${LOG}" > /dev/null' EXIT
 
-log "Pushing leaf mirrors. Inside ftpsync: ${FROMFTPSYNC}. Pushkind: ${PUSHKIND}" >> ${LOG}
+log "Pushing leaf mirrors. Inside ftpsync: ${FROMFTPSYNC}. Pushkind: ${PUSHKIND}" >> "${LOG}"
 
 HOOK=(
     HOOKNR=1
@@ -243,9 +243,9 @@ while read MTYPE MLNAME MHOSTNAME MUSER MSSHOPT; do
     )
 
     # And finally, push the mirror
-    log "Trigger ${MLNAME}" >> ${LOG}
+    log "Trigger ${MLNAME}" >> "${LOG}"
     signal "${SIGNAL_OPTS}" &
-    log "Trigger for ${MLNAME} done" >> ${LOG}
+    log "Trigger for ${MLNAME} done" >> "${LOG}"
 
     HOOK=(
         HOOKNR=2
@@ -273,7 +273,7 @@ if [ "xtruex" = "x${FROMFTPSYNC}x" ] && [ "xmhopx" = "x${PUSHKIND}x" ]; then
     done
 
     if [ ${tries} -ge ${PUSHDELAY} ]; then
-        error "Failed to wait for our mirrors when sending mhop push down." >> ${LOG}
+        error "Failed to wait for our mirrors when sending mhop push down." >> "${LOG}"
     fi
 fi
 
