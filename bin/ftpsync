@@ -169,7 +169,7 @@ check_rsync() {
 
 
 # As what are we called?
-NAME="`basename $0`"
+NAME="$(basename $0)"
 # The original command line arguments need to be saved!
 if [ $# -gt 0 ]; then
     ORIGINAL_COMMAND=$*
@@ -236,7 +236,7 @@ fi
 ########################################################################
 # There should be nothing to edit here, use the config file            #
 ########################################################################
-MIRRORNAME=${MIRRORNAME:-`hostname -f`}
+MIRRORNAME=${MIRRORNAME:-$(hostname -f)}
 # Where to put logfiles in
 LOGDIR=${LOGDIR:-"${BASEDIR}/log"}
 # Our own logfile
@@ -522,7 +522,7 @@ done
 # We only update our tracefile when we had a stage2 or an all sync.
 # Otherwise we would update it after stage1 already, which is wrong.
 if [ "xtruex" = "x${SYNCSTAGE2}x" ] || [ "xtruex" = "x${SYNCALL}x" ]; then
-    if [ -d "`dirname "${TO}/${TRACE}"`" ]; then
+    if [ -d "$(dirname "${TO}/${TRACE}")" ]; then
         LC_ALL=POSIX LANG=POSIX date -u > "${TO}/${TRACE}"
         echo "Used ftpsync version: ${VERSION}" >> "${TO}/${TRACE}"
         echo "Running on host: $(hostname -f)" >> "${TO}/${TRACE}"
