@@ -195,7 +195,7 @@ hook () {
     if [ -n "${HOOKSCR}" ]; then
         log "Running hook $HOOKNR: ${HOOKSCR}"
         set +e
-        "${HOOKSCR}"
+        ${HOOKSCR}
         result=$?
         set -e
         log "Back from hook $HOOKNR, got returncode ${result}"
