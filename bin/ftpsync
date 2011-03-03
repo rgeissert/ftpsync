@@ -113,7 +113,7 @@ cleanup() {
         SPEED=$(
             SPEEDLINE=$(egrep '[0-9.]+ bytes/sec' "${LOGDIR}/rsync-${NAME}.log")
             set "nothing" ${SPEEDLINE}
-            echo $8
+            echo ${8:-""}
         )
         if [ -n "${SPEED}" ]; then
             SPEED=${SPEED%%.*}
