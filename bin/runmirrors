@@ -215,7 +215,7 @@ while read MTYPE MLNAME MHOSTNAME MUSER MSSHOPT; do
         elif [ ${MSSHOPT:0:1} -eq 1 ] || [ ${MSSHOPT:0:1} -eq 2 ]; then
             # We do seem to have oldstyle options here.
             MPROTO=${MSSHOPT:0:1}
-            MKEYFILE=${MSSHOPT:1}
+            MKEYFILE=${MSSHOPT:2}
             SSHOPT=""
         else
             error "I don't know what is configured for mirror ${MLNAME}"
