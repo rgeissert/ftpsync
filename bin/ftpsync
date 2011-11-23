@@ -243,7 +243,7 @@ LOGDIR=${LOGDIR:-"${BASEDIR}/log"}
 LOG=${LOG:-"${LOGDIR}/${NAME}.log"}
 
 # Where should we put all the mirrored files?
-TO=${TO:-"/org/ftp.debian.org/ftp/"}
+TO=${TO:-"/srv/mirrors/debian/"}
 
 # used by log() and error()
 PROGRAM=${PROGRAM:-"${NAME}-$(hostname -s)"}
@@ -287,7 +287,7 @@ RSYNC_OPTIONS1=${RSYNC_OPTIONS1:-"--exclude Packages* --exclude Sources* --exclu
 # Options for the second pass, where we do want everything, including deletion of old and now unused files
 RSYNC_OPTIONS2=${RSYNC_OPTIONS2:-"--max-delete=40000 --delay-updates --delete --delete-after --delete-excluded"}
 # Which rsync share to use on our upstream mirror?
-RSYNC_PATH=${RSYNC_PATH:-"ftp"}
+RSYNC_PATH=${RSYNC_PATH:-"debian"}
 
 # Now add the bwlimit option. As default is 0 we always add it, rsync interprets
 # 0 as unlimited, so this is safe.

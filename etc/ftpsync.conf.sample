@@ -13,10 +13,10 @@
 ## Destination of the mirrored files. Should be an empty directory.
 ## CAREFUL, this directory will contain the mirror. Everything else
 ## that might have happened to be in there WILL BE GONE after the mirror sync!
-#TO="/org/ftp.debian.org/ftp/"
+#TO="/srv/mirrors/debian/"
 
 ## The upstream name of the rsync share.
-#RSYNC_PATH="ftp"
+#RSYNC_PATH="debian"
 
 ## The host we mirror from
 #RSYNC_HOST=some.mirror.debian.org
