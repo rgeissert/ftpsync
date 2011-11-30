@@ -225,10 +225,10 @@ fi
 #  can be used to exclude a complete architecture from                 #
 # mirrorring. Use as space seperated list.                             #
 # Possible values are:                                                 #
-# alpha, amd64, arm, armel, hppa, hurd-i386, i386, ia64,               #
-# mipsel, mips, powerpc, s390, sparc, kfreebsd-i386, kfreebsd-amd64    #
+# alpha, amd64, arm, armel, armhf, hppa, hurd-i386, i386, ia64, mips   #
+# mipsel, powerpc, s390, s390x, sparc, kfreebsd-i386, kfreebsd-amd64   #
 # and source.                                                          #
-# eg. ARCH_EXCLUDE="alpha arm armel mipsel mips s390 sparc"            #
+# eg. ARCH_EXCLUDE="alpha arm armel mipsel mips s390 s390x sparc"      #
 #                                                                      #
 # An unset value will mirror all architectures                         #
 ########################################################################
