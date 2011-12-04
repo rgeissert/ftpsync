@@ -198,7 +198,11 @@ hook () {
         ${HOOKSCR}
         result=$?
         set -e
-        log "Back from hook $HOOKNR, got returncode ${result}"
+	if [ ${result} -ne 0 ] ; then
+	    error "Back from hook $HOOKNR, got returncode ${result}"
+	else
+	    log "Back from hook $HOOKNR, got returncode ${result}"
+	fi
         return $result
     else
         return 0
