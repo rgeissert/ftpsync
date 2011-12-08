@@ -92,12 +92,12 @@ signal () {
 
     if [ "xallx" = "x${PUSHTYPE}x" ]; then
         # Default normal "fire and forget" push. We background that, we do not care about the mirrors doings
-        echo "Sending normal push" >> "${LOGDIR}/${MIRROR}.log"
+        log "Sending normal push" >> "${LOGDIR}/${MIRROR}.log"
         PUSHARGS1="sync:all"
         ssh -f $SSH_OPTIONS "${HOSTNAME}" "${PUSHARGS} ${PUSHARGS1}" >>"${LOGDIR}/${MIRROR}.log"
     elif [ "xstagedx" = "x${PUSHTYPE}x" ] || [ "xmhopx" = "x${PUSHTYPE}x" ]; then
         # Want a staged push. Fine, lets do that. Not backgrounded. We care about the mirrors doings.
-        echo "Sending staged push" >> "${LOGDIR}/${MIRROR}.log"
+        log "Sending staged push" >> "${LOGDIR}/${MIRROR}.log"
 
         # Only send stage1 if we havent already send it. When called with stage2, we already did.
         if [ "xstage2x" != "x${PUSHKIND}x" ]; then
@@ -129,10 +129,10 @@ signal () {
             # This is a little racy, especially if the other parts decide to do this
             # at the same time, but it wont hurt more than a mail too much, so I don't care much
             if [ ${tries} -ge ${PUSHDELAY} ]; then
-                echo "Failed to wait for all other mirrors. Failed ones are:" >> "${LOGDIR}/${MIRROR}.log"
+                log "Failed to wait for all other mirrors. Failed ones are:" >> "${LOGDIR}/${MIRROR}.log"
                 for file in ${PUSHLOCKS}; do
                     if [ ! -f ${file} ]; then
-                        echo "${file}" >> "${LOGDIR}/${MIRROR}.log"
+                        log "${file}" >> "${LOGDIR}/${MIRROR}.log"
                         error "Missing Pushlockfile ${file} after waiting ${tries} second, continuing"
                     fi
                 done
@@ -150,7 +150,7 @@ signal () {
             return
         else
             PUSHARGS2="sync:stage2"
-            echo "Now doing the second stage push" >> "${LOGDIR}/${MIRROR}.log"
+            log "Now doing the second stage push" >> "${LOGDIR}/${MIRROR}.log"
             ssh $SSH_OPTIONS "${HOSTNAME}" "${PUSHARGS} ${PUSHARGS2}" >>"${LOGDIR}/${MIRROR}.log" 2>&1
         fi
     else
