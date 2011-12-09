@@ -414,6 +414,7 @@ exec >"$LOG" 2>&1 <&-
 log "Mirrorsync start"
 
 # Look who pushed us and note that in the log.
+SSH_CONNECTION=${SSH_CONNECTION:-""}
 PUSHFROM="${SSH_CONNECTION%%\ *}"
 if [ -n "${PUSHFROM}" ]; then
     log "We got pushed from ${PUSHFROM}"
