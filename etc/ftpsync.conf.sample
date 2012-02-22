@@ -16,6 +16,10 @@
 #TO="/srv/mirrors/debian/"
 
 ## The upstream name of the rsync share.
+##
+## You can find out what share names your upstream mirror supports by running
+## rsync YOURUPSTREAMSERVER::
+## (You might have to export RSYNC_USER/RSYNC_PASSWORD for this to work)
 #RSYNC_PATH="debian"
 
 ## The host we mirror from
