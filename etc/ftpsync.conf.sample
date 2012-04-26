@@ -115,6 +115,10 @@
 ## here, and we also do not want to delete any files yet.
 #RSYNC_OPTIONS1="--exclude Packages* --exclude Sources* --exclude Release* --exclude InRelease --exclude ls-lR*"
 
+## Options for the pre-second pass. We only get new index files, to
+## basically shorten second pass.
+#RSYNC_OPTIONSpre2="--ignore-existing --fuzzy"
+
 ## Options the second pass gets. Now we want the Packages/Source indices too
 ## and we also want to delete files. We also want to delete files that are
 ## excluded.
