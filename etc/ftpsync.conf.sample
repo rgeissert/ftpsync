@@ -89,6 +89,10 @@
 ## synced mirror even if we get multiple pushes in a short timeframe
 #UPDATEREQUIRED="${TO}/Archive-Update-Required-${MIRRORNAME}"
 
+## Number of seconds to sleep before retrying to sync whenever upstream
+## is found to be updating while our update is running
+#UIPSLEEP=1200
+
 ## The trace file is used by a mirror check tool to see when we last
 ## had a successful mirror sync. Make sure that it always ends up in
 ## project/trace and always shows the full hostname.

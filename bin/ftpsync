@@ -268,6 +268,8 @@ LOGROTATE=${LOGROTATE:-14}
 LOCK=${LOCK:-"${TO}/Archive-Update-in-Progress-${MIRRORNAME}"}
 # timeout for the lockfile, in case we have bash older than v4 (and no /proc)
 LOCKTIMEOUT=${LOCKTIMEOUT:-3600}
+# sleeping time when an AUIP file is found but is not ours
+UIPSLEEP=${UIPSLEEP:-1200}
 # Do we need another rsync run?
 UPDATEREQUIRED="${TO}/Archive-Update-Required-${MIRRORNAME}"
 # Trace file for mirror stats and checks (make sure we get full hostname)
@@ -503,8 +505,11 @@ while [ -e "${UPDATEREQUIRED}" ]; do
         done
 
         if $upstream_uip; then
-            log "Upstream archive update in progress, skipping stage2 (ignore rsync error below)"
-	    result=1
+            log "Upstream archive update in progress, skipping stage2"
+            log "Retrying update in ${UIPSLEEP}"
+            touch "${UPDATEREQUIRED}"
+            sleep "${UIPSLEEP}"
+            result=0
         else
             log "Running stage2: ${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS2} ${EXCLUDE} ${SOURCE_EXCLUDE} ${RSYNCPTH}::${RSYNC_PATH} ${TO}"
 
