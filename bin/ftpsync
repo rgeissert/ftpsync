@@ -523,7 +523,21 @@ done
 # We only update our tracefile when we had a stage2 or an all sync.
 # Otherwise we would update it after stage1 already, which is wrong.
 if [ "xtruex" = "x${SYNCSTAGE2}x" ] || [ "xtruex" = "x${SYNCALL}x" ]; then
-    if [ -d "$(dirname "${TO}/${TRACE}")" ]; then
+    should_update=true
+    for aupfile in "${TO}/Archive-Update-in-Progress-"*; do
+        case "$aupfile" in
+            "${TO}/Archive-Update-in-Progress-*")
+                :
+            ;;
+            "${LOCK}")
+                :
+            ;;
+            *)
+                should_update=false
+            ;;
+        esac
+    done
+    if $should_update && [ -d "$(dirname "${TO}/${TRACE}")" ]; then
         LC_ALL=POSIX LANG=POSIX date -u > "${TO}/${TRACE}"
         echo "Used ftpsync version: ${VERSION}" >> "${TO}/${TRACE}"
         echo "Running on host: $(hostname -f)" >> "${TO}/${TRACE}"
