@@ -491,7 +491,7 @@ while [ -e "${UPDATEREQUIRED}" ]; do
         for aupfile in "${TO}/Archive-Update-in-Progress-"*; do
             case "$aupfile" in
                 "${TO}/Archive-Update-in-Progress-*")
-                    :
+                    error "Lock file is missing, this should not happen"
                 ;;
                 "${LOCK}")
                     :
