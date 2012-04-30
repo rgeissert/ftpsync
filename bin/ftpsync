@@ -12,7 +12,7 @@ set -E
 # Based losely on a number of existing scripts, written by an
 # unknown number of different people over the years.
 #
-# Copyright (C) 2008,2009,2010,2011 Joerg Jaspert <joerg@debian.org>
+# Copyright (C) 2008-2012 Joerg Jaspert <joerg@debian.org>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -36,7 +36,7 @@ BASEDIR=${BASEDIR:-"${HOME}"}
 # Script version. DO NOT CHANGE, *unless* you change the master copy maintained
 # by Joerg Jaspert and the Debian mirroradm group.
 # This is used to track which mirror is using which script version.
-VERSION="80387"
+VERSION="80486"
 
 # Source our common functions
 . "${BASEDIR}/etc/common"
@@ -316,7 +316,7 @@ SYNCSTAGE2=${SYNCSTAGE2:-"false"}
 SYNCALL=${SYNCALL:-"true"}
 # Do we have a mhop sync?
 SYNCMHOP=${SYNCMHOP:-"false"}
-# Do we callback?
+# Do we callback? (May get changed later)
 SYNCCALLBACK=${SYNCCALLBACK:-"false"}
 # If we call back we need some more options defined in the config file.
 CALLBACKUSER=${CALLBACKUSER:-"archvsync"}
@@ -327,7 +327,7 @@ CALLBACKKEY=${CALLBACKKEY:-"none"}
 EXCLUDE=${EXCLUDE:-""}
 
 # The temp directory used by rsync --delay-updates is not
-# world-readable remotely. Always exclude it to avoid errors. 
+# world-readable remotely. Always exclude it to avoid errors.
 EXCLUDE="${EXCLUDE} --exclude .~tmp~/"
 
 SOURCE_EXCLUDE=${SOURCE_EXCLUDE:-""}
@@ -379,11 +379,11 @@ if ! ( set -o noclobber; echo "$$" > "${LOCK}") 2> /dev/null; then
     if [ ${BASH_VERSINFO[0]} -gt 3 ] || [ -L /proc/self ]; then
         # We have a recent enough bash version, lets do it the easy way,
         # the lock will contain the right pid, thanks to $BASHPID
-        if ! $(kill -0 $(cat ${LOCK}) 2>/dev/null); then
+        if ! $(kill -0 $(< ${LOCK}) 2>/dev/null); then
             # Process does either not exist or is not owned by us.
             echo "$$" > "${LOCK}"
         else
-            echo "Unable to start rsync, lock file still exists, PID $(cat ${LOCK})"
+            echo "Unable to start rsync, lock file still exists, PID $(< ${LOCK})"
             exit 1
         fi
     else
@@ -527,8 +527,22 @@ if [ "xtruex" = "x${SYNCSTAGE2}x" ] || [ "xtruex" = "x${SYNCALL}x" ]; then
         LC_ALL=POSIX LANG=POSIX date -u > "${TO}/${TRACE}"
         echo "Used ftpsync version: ${VERSION}" >> "${TO}/${TRACE}"
         echo "Running on host: $(hostname -f)" >> "${TO}/${TRACE}"
+
+        GLOBALARCHLIST="source amd64 armel armhf hurd-i386 i386 ia64 kfreebsd-amd64 kfreebsd-i386 mips mipsel powerpc s390 s390x sparc"
+
+        AEXCLUDE="^${ARCH_EXCLUDE// /\$|^}$"
+        ARCHLIST=""
+        for ARCH in ${GLOBALARCHLIST}; do
+            if ! [[ ${ARCH} =~ ${AEXCLUDE} ]]; then
+                ARCHLIST="${ARCHLIST} ${ARCH}"
+            fi
+        done
+        out="GUESSED:{${ARCHLIST}}"
+        echo "Architectures: ${out}" >> "${TO}/${TRACE}"
+        echo "Upstream-mirror: ${RSYNC_HOST}" >> "${TO}/${TRACE}"
     fi
 fi
+
 
 HOOK=(
     HOOKNR=4
@@ -544,6 +558,49 @@ fi
 
 # Remove the Archive-Update-in-Progress file before we push our downstreams.
 rm -f "${LOCK}"
+
+# Check if there is a newer version of ftpsync. If so inform the admin, but not
+# more than once every third day.
+if [ -r "${TO}/project/ftpsync/LATEST.VERSION" ]; then
+    LATEST=$(< "${TO}/project/ftpsync/LATEST.VERSION")
+    if ! [[ ${LATEST} =~ [0-9]+ ]]; then
+        LATEST=0
+    fi
+    if [ ${LATEST} -gt ${VERSION} ]; then
+        if [ -z "${MAILTO}" ]; then
+            difference=0
+            if [ -f "${LOGDIR}/ftpsync.newversion" ]; then
+                stamptime=$(< "${LOGDIR}/ftpsync.newversion")
+                unixtime=$(date +%s)
+                difference=$(( $unixtime - $stamptime ))
+            fi
+            if [ ${difference} -ge 259200 ]; then
+                # Only warn every third day
+                mail -e -s "[$(hostname -s)] Update for ftpsync available" ${MAILTO} <<EOF
+Hello admin,
+
+i found that there is a new version of me available.
+Me lonely ftpsync is currently version: ${VERSION}
+New release of myself is available as:  ${LATEST}
+
+Me, myself and I - and the Debian mirroradmins - would be very grateful
+if you could update me. You can find the latest version on your mirror,
+check $(hostname -s):${TO}/project/ftpsync/ftpsync-${LATEST}.tar.gz
+
+You can ensure the validity of that file by using sha512sum or md5sum
+against the available checksum files secured with a signature from the
+Debian FTPMaster signing key.
+
+EOF
+
+                date +%s > "${LOGDIR}/ftpsync.newversion"
+            fi
+        fi
+    else
+        # Remove a possible stampfile
+        rm -f "${LOGDIR}/ftpsync.newversion"
+    fi
+fi
 
 if [ x${HUB} = "xtrue" ]; then
     # Trigger slave mirrors if we had a push for stage2 or all, or if its mhop
