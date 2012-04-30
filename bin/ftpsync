@@ -494,17 +494,17 @@ while [ -e "${UPDATEREQUIRED}" ]; do
             case "$aupfile" in
                 "${TO}/Archive-Update-in-Progress-*")
                     error "Lock file is missing, this should not happen"
-                ;;
+                    ;;
                 "${LOCK}")
                     :
-                ;;
+                    ;;
                 *)
                     upstream_uip=true
-                ;;
+                    ;;
             esac
         done
 
-        if $upstream_uip; then
+        if [ "xtruex" = "x${upstream_uip}x" ]; then
             log "Upstream archive update in progress, skipping stage2"
             log "Retrying update in ${UIPSLEEP}"
             touch "${UPDATEREQUIRED}"
