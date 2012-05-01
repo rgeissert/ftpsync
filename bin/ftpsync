@@ -270,6 +270,8 @@ LOCK=${LOCK:-"${TO}/Archive-Update-in-Progress-${MIRRORNAME}"}
 LOCKTIMEOUT=${LOCKTIMEOUT:-3600}
 # sleeping time when an AUIP file is found but is not ours
 UIPSLEEP=${UIPSLEEP:-1200}
+# retries whenever an upstream (or possibly stale) AUIP file is found
+UIPRETRIES=${UIPRETRIES:-3}
 # Do we need another rsync run?
 UPDATEREQUIRED="${TO}/Archive-Update-Required-${MIRRORNAME}"
 # Trace file for mirror stats and checks (make sure we get full hostname)
@@ -447,6 +449,8 @@ fi
 export RSYNC_PASSWORD
 export RSYNC_PROXY
 
+UPDATE_RETRIES=0
+
 while [ -e "${UPDATEREQUIRED}" ]; do
     log "Running mirrorsync, update is required, ${UPDATEREQUIRED} exists"
 
@@ -506,10 +510,17 @@ while [ -e "${UPDATEREQUIRED}" ]; do
 
         if [ "xtruex" = "x${upstream_uip}x" ]; then
             log "Upstream archive update in progress, skipping stage2"
-            log "Retrying update in ${UIPSLEEP}"
-            touch "${UPDATEREQUIRED}"
-            sleep "${UIPSLEEP}"
-            result=0
+            if [ ${UPDATE_RETRIES} -lt ${UIPRETRIES} ]; then
+                log "Retrying update in ${UIPSLEEP}"
+                touch "${UPDATEREQUIRED}"
+                UPDATE_RETRIES=$(($UPDATE_RETRIES+1))
+                sleep "${UIPSLEEP}"
+                result=0
+            else
+                error "Update has been retried ${UPDATEREQUIRED} times, aborting"
+                log "Perhaps upstream is still updating or there's a stale AUIP file"
+                result=1
+            fi
         else
             log "Running stage2: ${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS2} ${EXCLUDE} ${SOURCE_EXCLUDE} ${RSYNCPTH}::${RSYNC_PATH} ${TO}"
 
