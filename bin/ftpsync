@@ -299,9 +299,13 @@ RSYNC_OPTIONS2=${RSYNC_OPTIONS2:-"--max-delete=40000 --delay-updates --delete --
 # Which rsync share to use on our upstream mirror?
 RSYNC_PATH=${RSYNC_PATH:-"debian"}
 
+# Extra rsync options as defined by the admin locally. Won't be set
+# to any default by ftpsync. Those will be added to EACH AND EVERY rsync call.
+RSYNC_EXTRA=${RSYNC_EXTRA:-""}
+
 # Now add the bwlimit option. As default is 0 we always add it, rsync interprets
 # 0 as unlimited, so this is safe.
-RSYNC_OPTIONS="--bwlimit=${RSYNC_BW} ${RSYNC_OPTIONS}"
+RSYNC_OPTIONS="${RSYNC_EXTRA} --bwlimit=${RSYNC_BW} ${RSYNC_OPTIONS}"
 
 # We have no default host to sync from, but will error out if its unset
 RSYNC_HOST=${RSYNC_HOST:-""}

@@ -111,13 +111,23 @@
 ## The rsync program
 #RSYNC=rsync
 
-## BE VERY CAREFUL WHEN YOU CHANGE THE RSYNC_OPTIONS! BETTER DON'T!
-## BE VERY CAREFUL WHEN YOU CHANGE THE RSYNC_OPTIONS! BETTER DON'T!
-## BE VERY CAREFUL WHEN YOU CHANGE THE RSYNC_OPTIONS! BETTER DON'T!
-## BE VERY CAREFUL WHEN YOU CHANGE THE RSYNC_OPTIONS! BETTER DON'T!
+## Extra rsync options as defined by the local admin.
+## There is no default by ftpsync.
+##
+## Please note that these options are added to EVERY rsync call.
+## Also note that these are added at the beginning of the rsync call, as
+## the very first set of options.
+## Please ensure you do not add a conflict with the usual rsync options as
+## shown below.
+# RSYNC_EXTRA=""
 
 ## limit I/O bandwidth. Value is KBytes per second, unset or 0 means unlimited
 #RSYNC_BW=""
+
+## BE VERY CAREFUL WHEN YOU CHANGE THE RSYNC_OPTIONS! BETTER DON'T!
+## BE VERY CAREFUL WHEN YOU CHANGE THE RSYNC_OPTIONS! BETTER DON'T!
+## BE VERY CAREFUL WHEN YOU CHANGE THE RSYNC_OPTIONS! BETTER DON'T!
+## BE VERY CAREFUL WHEN YOU CHANGE THE RSYNC_OPTIONS! BETTER DON'T!
 
 ## Default rsync options every rsync invocation sees.
 #RSYNC_OPTIONS="-prltvHSB8192 --timeout 3600 --stats --exclude Archive-Update-in-Progress-${MIRRORNAME} --exclude ${TRACE} --exclude Archive-Update-Required-${MIRRORNAME}"
