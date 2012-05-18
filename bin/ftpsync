@@ -547,7 +547,7 @@ if [ "xtruex" = "x${SYNCSTAGE2}x" ] || [ "xtruex" = "x${SYNCALL}x" ]; then
             touch "${TO}/${TRACE}"
             ;;
         terse|full)
-            log "Creating a ${EXTENDEDTRACE trace file"
+            log "Creating a ${EXTENDEDTRACE} trace file"
             if [ -d "$(dirname "${TO}/${TRACE}")" ]; then
                 LC_ALL=POSIX LANG=POSIX date -u > "${TO}/${TRACE}"
                 echo "Used ftpsync version: ${VERSION}" >> "${TO}/${TRACE}"
