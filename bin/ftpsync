@@ -337,7 +337,7 @@ for ARCH in ${ARCH_EXCLUDE}; do
     EXCLUDE="${EXCLUDE} --exclude binary-${ARCH}/ --exclude installer-${ARCH}/ --exclude Contents-${ARCH}.gz --exclude Contents-${ARCH}.bz2 --exclude Contents-${ARCH}.diff/ --exclude arch-${ARCH}.files --exclude arch-${ARCH}.list.gz --exclude *_${ARCH}.deb --exclude *_${ARCH}.udeb --exclude *_${ARCH}.changes"
     if [ "${ARCH}" = "source" ]; then
         if [ -z ${SOURCE_EXCLUDE} ]; then
-            SOURCE_EXCLUDE=" --exclude source/ --exclude *.tar.gz --exclude *.diff.gz --exclude *.tar.bz2 --exclude *.tar.xz -exclude *.diff.bz2 --exclude *.dsc "
+            SOURCE_EXCLUDE=" --exclude source/ --exclude *.tar.gz --exclude *.diff.gz --exclude *.tar.bz2 --exclude *.tar.xz --exclude *.diff.bz2 --exclude *.dsc "
         fi
     fi
 done
