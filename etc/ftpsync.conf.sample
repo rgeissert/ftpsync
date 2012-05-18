@@ -95,6 +95,17 @@
 ## This is *relative* to ${TO}
 #TRACE="project/trace/${MIRRORNAME}"
 
+## The trace file can have different format/contents. Here you can select
+## what it will be.
+## Possible values are
+## "full"  - all information
+## "terse" - basic, timestamp only (date -u)
+## "touch" - just touch the file in existance
+## "none"  - no tracefile at all
+##
+## Default and required value for Debian mirrors is full.
+#EXTENDEDTRACE="full"
+
 ## We sync our mirror using rsync (everything else would be insane), so
 ## we need a few options set.
 ## The rsync program

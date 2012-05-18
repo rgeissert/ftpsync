@@ -272,6 +272,16 @@ LOCKTIMEOUT=${LOCKTIMEOUT:-3600}
 UPDATEREQUIRED="${TO}/Archive-Update-Required-${MIRRORNAME}"
 # Trace file for mirror stats and checks (make sure we get full hostname)
 TRACE=${TRACE:-"project/trace/${MIRRORNAME}"}
+# The trace file can have different format/contents. Here you can select
+# what it will be.
+# Possible values are
+# "full"  - all information
+# "terse" - basic, timestamp only (date -u)
+# "touch" - just touch the file in existance
+# "none"  - no tracefile at all
+#
+# Default and required value for Debian mirrors is full.
+EXTENDEDTRACE=${EXTENDEDTRACE:-"full"}
 
 # rsync program
 RSYNC=${RSYNC:-rsync}
@@ -522,25 +532,42 @@ done
 
 # We only update our tracefile when we had a stage2 or an all sync.
 # Otherwise we would update it after stage1 already, which is wrong.
+
 if [ "xtruex" = "x${SYNCSTAGE2}x" ] || [ "xtruex" = "x${SYNCALL}x" ]; then
-    if [ -d "$(dirname "${TO}/${TRACE}")" ]; then
-        LC_ALL=POSIX LANG=POSIX date -u > "${TO}/${TRACE}"
-        echo "Used ftpsync version: ${VERSION}" >> "${TO}/${TRACE}"
-        echo "Running on host: $(hostname -f)" >> "${TO}/${TRACE}"
+    case ${EXTENDEDTRACE} in
+        none)
+            log "No trace file wanted. Not creating one"
+            ;;
+        touch)
+            log "Just touching the trace file"
+            touch "${TO}/${TRACE}"
+            ;;
+        terse|full)
+            log "Creating a ${EXTENDEDTRACE trace file"
+            if [ -d "$(dirname "${TO}/${TRACE}")" ]; then
+                LC_ALL=POSIX LANG=POSIX date -u > "${TO}/${TRACE}"
+                echo "Used ftpsync version: ${VERSION}" >> "${TO}/${TRACE}"
+                echo "Running on host: $(hostname -f)" >> "${TO}/${TRACE}"
+                if [ "xfullx" = "x${EXTENDEDTRACE}x" ]; then
+                    GLOBALARCHLIST="source amd64 armel armhf hurd-i386 i386 ia64 kfreebsd-amd64 kfreebsd-i386 mips mipsel powerpc s390 s390x sparc"
 
-        GLOBALARCHLIST="source amd64 armel armhf hurd-i386 i386 ia64 kfreebsd-amd64 kfreebsd-i386 mips mipsel powerpc s390 s390x sparc"
-
-        AEXCLUDE="^${ARCH_EXCLUDE// /\$|^}$"
-        ARCHLIST=""
-        for ARCH in ${GLOBALARCHLIST}; do
-            if ! [[ ${ARCH} =~ ${AEXCLUDE} ]]; then
-                ARCHLIST="${ARCHLIST} ${ARCH}"
+                    AEXCLUDE="^${ARCH_EXCLUDE// /\$|^}$"
+                    ARCHLIST=""
+                    for ARCH in ${GLOBALARCHLIST}; do
+                        if ! [[ ${ARCH} =~ ${AEXCLUDE} ]]; then
+                            ARCHLIST="${ARCHLIST} ${ARCH}"
+                        fi
+                    done
+                    out="GUESSED:{${ARCHLIST}}"
+                    echo "Architectures: ${out}" >> "${TO}/${TRACE}"
+                    echo "Upstream-mirror: ${RSYNC_HOST}" >> "${TO}/${TRACE}"
+                fi # full trace
             fi
-        done
-        out="GUESSED:{${ARCHLIST}}"
-        echo "Architectures: ${out}" >> "${TO}/${TRACE}"
-        echo "Upstream-mirror: ${RSYNC_HOST}" >> "${TO}/${TRACE}"
-    fi
+            ;;
+        *)
+            error "Unsupported EXTENDEDTRACE value configured in ${BASEDIR}/etc/${NAME}.conf, please fix"
+            ;;
+    esac
 fi
 
 
