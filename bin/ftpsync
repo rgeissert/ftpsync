@@ -466,11 +466,11 @@ while [ -e "${UPDATEREQUIRED}" ]; do
     if [ "xtruex" = "x${SYNCSTAGE1}x" ] || [ "xtruex" = "x${SYNCALL}x" ]; then
         while [ -e "${UPDATEREQUIRED}" ]; do
             rm -f "${UPDATEREQUIRED}"
-            log "Running stage1: ${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS1} ${EXCLUDE} ${SOURCE_EXCLUDE}  ${RSYNCPTH}::${RSYNC_PATH} ${TO}"
+            log "Running stage1: ${RSYNC} ${RSYNC_OPTIONS} ${EXCLUDE} ${SOURCE_EXCLUDE} ${RSYNC_OPTIONS1}  ${RSYNCPTH}::${RSYNC_PATH} ${TO}"
 
             set +e
             # Step one, sync everything except Packages/Releases
-            ${RSYNC} ${RSYNC_OPTIONS} ${RSYNC_OPTIONS1} ${EXCLUDE} ${SOURCE_EXCLUDE} \
+            ${RSYNC} ${RSYNC_OPTIONS} ${EXCLUDE} ${SOURCE_EXCLUDE} ${RSYNC_OPTIONS1} \
                 ${RSYNCPTH}::${RSYNC_PATH} "${TO}" >"${LOGDIR}/rsync-${NAME}.log" 2>"${LOGDIR}/rsync-${NAME}.error"
             result=$?
             set -e
