@@ -503,6 +503,13 @@ while [ -e "${UPDATEREQUIRED}" ]; do
                     :
                     ;;
                 *)
+                    if [ -f "$aupfile" ]; then
+                        # Remove the file, it will be synced again if
+                        # upstream is still not done
+                        rm -f "$aupfile"
+                    else
+                        log "AUIP file '$aupfile' is not really a file, weird"
+                    fi
                     upstream_uip=true
                     ;;
             esac
