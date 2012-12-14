@@ -130,6 +130,11 @@
 ## --delete-delay should be set in RSYNC_OPTIONS2 (below).
 #RSYNC_DELETE_METHOD=""
 
+## Whether to enable the --fuzzy option of rsync even if supported.
+## The only recognised value is "never", which disables any attempt to
+## automatically use the --fuzzy option.
+#RSYNC_FUZZY=yes
+
 ## BE VERY CAREFUL WHEN YOU CHANGE THE RSYNC_OPTIONS! BETTER DON'T!
 ## BE VERY CAREFUL WHEN YOU CHANGE THE RSYNC_OPTIONS! BETTER DON'T!
 ## BE VERY CAREFUL WHEN YOU CHANGE THE RSYNC_OPTIONS! BETTER DON'T!

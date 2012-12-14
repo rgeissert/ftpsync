@@ -310,6 +310,19 @@ if [ "xautox" = "x${RSYNC_DELETE_METHOD}x" ]; then
     fi
 fi
 
+# Whether to add --fuzzy if supported by the client's rsync.
+# It depends on protocol 29 or greater. A value of "never" disables it
+# entirely.
+RSYNC_FUZZY=${RSYNC_FUZZY:-yes}
+if [ "xneverx" != "x${RSYNC_FUZZY}x" ]; then
+    if [ 29 -le ${RSYNC_PROTOCOL} ]; then
+        RSYNC_FUZZY=--fuzzy
+    fi
+fi
+if [ "x--fuzzyx" != "x${RSYNC_FUZZY}x" ]; then
+    RSYNC_FUZZY=''
+fi
+
 # Default rsync options for *every* rsync call
 RSYNC_OPTIONS=${RSYNC_OPTIONS:-"-prltvHSB8192 --timeout 3600 --stats ${RSYNC_FILTER}"}
 # Options we only use in the first pass, where we do not want packages/sources to fly in yet and don't want to delete files
@@ -325,7 +338,7 @@ RSYNC_EXTRA=${RSYNC_EXTRA:-""}
 
 # Now add the bwlimit option. As default is 0 we always add it, rsync interprets
 # 0 as unlimited, so this is safe.
-RSYNC_OPTIONS="${RSYNC_EXTRA} --bwlimit=${RSYNC_BW} ${RSYNC_OPTIONS}"
+RSYNC_OPTIONS="${RSYNC_EXTRA} --bwlimit=${RSYNC_BW} ${RSYNC_FUZZY} ${RSYNC_OPTIONS}"
 
 # Finally, make sure RSYNC_OPTIONS2 has either --delete-after or --deleter-delay
 if ! [[ ${RSYNC_OPTIONS2} =~ --delete-(after|delay) ]]; then
