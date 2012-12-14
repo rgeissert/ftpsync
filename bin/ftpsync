@@ -598,7 +598,7 @@ if [ -r "${TO}/project/ftpsync/LATEST.VERSION" ]; then
         LATEST=0
     fi
     if [ ${LATEST} -gt ${VERSION} ]; then
-        if [ -z "${MAILTO}" ]; then
+        if [ -n "${MAILTO}" ]; then
             difference=0
             if [ -f "${LOGDIR}/ftpsync.newversion" ]; then
                 stamptime=$(< "${LOGDIR}/ftpsync.newversion")
