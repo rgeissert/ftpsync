@@ -291,20 +291,23 @@ RSYNC_FILTER=${RSYNC_FILTER:-"--filter=protect_Archive-Update-in-Progress-${MIRR
 # limit I/O bandwidth. Value is KBytes per second, unset or 0 is unlimited
 RSYNC_BW=${RSYNC_BW:-0}
 
+# Attempt to determine the supported rsync protocol so that some
+# "new"-ish options are used if supported by the client. A value of 0
+# means that it could not be determined.
+RSYNC_PROTOCOL=0
+if [[ "$(${RSYNC} --version)" =~ (protocol[ ]+version[ ]+([0-9]+)) ]]; then
+    RSYNC_PROTOCOL=${BASH_REMATCH[2]}
+fi
+
 # Set the delete method to --delete-delay if protocol version is 30 or
 # greater (meaning rsync 3.0.0 or greater is used). Use --delete-after
 # otherwise.
 RSYNC_DELETE_METHOD=${RSYNC_DELETE_METHOD:-auto}
 if [ "xautox" = "x${RSYNC_DELETE_METHOD}x" ]; then
     RSYNC_DELETE_METHOD=after
-
-    RSYNC_VERSION="$(${RSYNC} --version)"
-    if [[ $RSYNC_VERSION =~ (protocol[ ]+version[ ]+([0-9]+)) ]]; then
-        if [ 30 -le ${BASH_REMATCH[2]} ]; then
-            RSYNC_DELETE_METHOD=delay
-        fi
+    if [ 30 -le ${RSYNC_PROTOCOL} ]; then
+        RSYNC_DELETE_METHOD=delay
     fi
-    unset RSYNC_VERSION
 fi
 
 # Default rsync options for *every* rsync call
