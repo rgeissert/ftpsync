@@ -124,6 +124,12 @@
 ## limit I/O bandwidth. Value is KBytes per second, unset or 0 means unlimited
 #RSYNC_BW=""
 
+## Method used to delete files: "delay" or "after". "delay" is
+## recommended and is the default if no value is set and rsync 3 is
+## detected. NOTE: for this to work, neither --delete-after nor
+## --delete-delay should be set in RSYNC_OPTIONS2 (below).
+#RSYNC_DELETE_METHOD=""
+
 ## BE VERY CAREFUL WHEN YOU CHANGE THE RSYNC_OPTIONS! BETTER DON'T!
 ## BE VERY CAREFUL WHEN YOU CHANGE THE RSYNC_OPTIONS! BETTER DON'T!
 ## BE VERY CAREFUL WHEN YOU CHANGE THE RSYNC_OPTIONS! BETTER DON'T!
@@ -139,7 +145,7 @@
 ## Options the second pass gets. Now we want the Packages/Source indices too
 ## and we also want to delete files. We also want to delete files that are
 ## excluded.
-#RSYNC_OPTIONS2="--max-delete=40000 --delay-updates --delete --delete-after --delete-excluded"
+#RSYNC_OPTIONS2="--max-delete=40000 --delay-updates --delete --delete-excluded"
 
 ## You may establish the connection via a web proxy by setting the environment
 ## variable RSYNC_PROXY to a hostname:port pair pointing to your web proxy.  Note
