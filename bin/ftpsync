@@ -549,9 +549,9 @@ if [ "xtruex" = "x${SYNCSTAGE2}x" ] || [ "xtruex" = "x${SYNCALL}x" ]; then
         terse|full)
             log "Creating a ${EXTENDEDTRACE} trace file"
             if [ -d "$(dirname "${TO}/${TRACE}")" ]; then
-                LC_ALL=POSIX LANG=POSIX date -u > "${TO}/${TRACE}"
-                echo "Used ftpsync version: ${VERSION}" >> "${TO}/${TRACE}"
-                echo "Running on host: $(hostname -f)" >> "${TO}/${TRACE}"
+                LC_ALL=POSIX LANG=POSIX date -u > "${TO}/${TRACE}.new"
+                echo "Used ftpsync version: ${VERSION}" >> "${TO}/${TRACE}.new"
+                echo "Running on host: $(hostname -f)" >> "${TO}/${TRACE}.new"
                 if [ "xfullx" = "x${EXTENDEDTRACE}x" ]; then
                     GLOBALARCHLIST="source amd64 armel armhf hurd-i386 i386 ia64 kfreebsd-amd64 kfreebsd-i386 mips mipsel powerpc s390 s390x sparc"
 
@@ -563,9 +563,10 @@ if [ "xtruex" = "x${SYNCSTAGE2}x" ] || [ "xtruex" = "x${SYNCALL}x" ]; then
                         fi
                     done
                     out="GUESSED:{${ARCHLIST}}"
-                    echo "Architectures: ${out}" >> "${TO}/${TRACE}"
-                    echo "Upstream-mirror: ${RSYNC_HOST}" >> "${TO}/${TRACE}"
+                    echo "Architectures: ${out}" >> "${TO}/${TRACE}.new"
+                    echo "Upstream-mirror: ${RSYNC_HOST}" >> "${TO}/${TRACE}.new"
                 fi # full trace
+                mv "${TO}/${TRACE}.new" "${TO}/${TRACE}"
             fi
             ;;
         *)
