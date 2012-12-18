@@ -129,8 +129,13 @@
 ## BE VERY CAREFUL WHEN YOU CHANGE THE RSYNC_OPTIONS! BETTER DON'T!
 ## BE VERY CAREFUL WHEN YOU CHANGE THE RSYNC_OPTIONS! BETTER DON'T!
 
+## Files that must *never* be deleted by rsync. These are files handled
+## internally by ftpsync and will be created, updated, and deleted when
+## appropriate.
+#RSYNC_FILTER="--filter=protect_Archive-Update-in-Progress-${MIRRORNAME} --filter=protect_${TRACE} --filter=protect_Archive-Update-Required-${MIRRORNAME}"
+
 ## Default rsync options every rsync invocation sees.
-#RSYNC_OPTIONS="-prltvHSB8192 --timeout 3600 --stats --exclude=Archive-Update-in-Progress-${MIRRORNAME} --exclude=${TRACE} --exclude=Archive-Update-Required-${MIRRORNAME}"
+#RSYNC_OPTIONS="-prltvHSB8192 --timeout 3600 --stats ${RSYNC_FILTER}"
 
 ## Options the first pass gets. We do not want the Packages/Source indices
 ## here, and we also do not want to delete any files yet.
