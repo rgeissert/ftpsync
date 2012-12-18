@@ -130,11 +130,11 @@
 ## BE VERY CAREFUL WHEN YOU CHANGE THE RSYNC_OPTIONS! BETTER DON'T!
 
 ## Default rsync options every rsync invocation sees.
-#RSYNC_OPTIONS="-prltvHSB8192 --timeout 3600 --stats --exclude Archive-Update-in-Progress-${MIRRORNAME} --exclude ${TRACE} --exclude Archive-Update-Required-${MIRRORNAME}"
+#RSYNC_OPTIONS="-prltvHSB8192 --timeout 3600 --stats --exclude=Archive-Update-in-Progress-${MIRRORNAME} --exclude=${TRACE} --exclude=Archive-Update-Required-${MIRRORNAME}"
 
 ## Options the first pass gets. We do not want the Packages/Source indices
 ## here, and we also do not want to delete any files yet.
-#RSYNC_OPTIONS1="--exclude Packages* --exclude Sources* --exclude Release* --exclude InRelease --exclude i18n/* --exclude ls-lR*"
+#RSYNC_OPTIONS1="--exclude=Packages* --exclude=Sources* --exclude=Release* --exclude=InRelease --exclude=i18n/* --exclude=ls-lR*"
 
 ## Options the second pass gets. Now we want the Packages/Source indices too
 ## and we also want to delete files. We also want to delete files that are

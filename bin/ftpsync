@@ -293,7 +293,7 @@ RSYNC_BW=${RSYNC_BW:-0}
 # Default rsync options for *every* rsync call
 RSYNC_OPTIONS=${RSYNC_OPTIONS:-"-prltvHSB8192 --timeout 3600 --stats ${RSYNC_FILTER}"}
 # Options we only use in the first pass, where we do not want packages/sources to fly in yet and don't want to delete files
-RSYNC_OPTIONS1=${RSYNC_OPTIONS1:-"--exclude Packages* --exclude Sources* --exclude Release* --exclude InRelease --exclude i18n/* --exclude ls-lR*"}
+RSYNC_OPTIONS1=${RSYNC_OPTIONS1:-"--exclude=Packages* --exclude=Sources* --exclude=Release* --exclude=InRelease --exclude=i18n/* --exclude=ls-lR*"}
 # Options for the second pass, where we do want everything, including deletion of old and now unused files
 RSYNC_OPTIONS2=${RSYNC_OPTIONS2:-"--max-delete=40000 --delay-updates --delete --delete-after --delete-excluded"}
 # Which rsync share to use on our upstream mirror?
@@ -342,16 +342,16 @@ EXCLUDE=${EXCLUDE:-""}
 
 # The temp directory used by rsync --delay-updates is not
 # world-readable remotely. Always exclude it to avoid errors.
-EXCLUDE="${EXCLUDE} --exclude .~tmp~/"
+EXCLUDE="${EXCLUDE} --exclude=.~tmp~/"
 
 SOURCE_EXCLUDE=${SOURCE_EXCLUDE:-""}
 ARCH_EXCLUDE=${ARCH_EXCLUDE:-""}
 # Exclude architectures defined in $ARCH_EXCLUDE
 for ARCH in ${ARCH_EXCLUDE}; do
-    EXCLUDE="${EXCLUDE} --exclude binary-${ARCH}/ --exclude installer-${ARCH}/ --exclude Contents-${ARCH}.gz --exclude Contents-udeb-${ARCH}.gz --exclude Contents-${ARCH}.diff/ --exclude arch-${ARCH}.files --exclude arch-${ARCH}.list.gz --exclude *_${ARCH}.deb --exclude *_${ARCH}.udeb --exclude *_${ARCH}.changes"
+    EXCLUDE="${EXCLUDE} --exclude=binary-${ARCH}/ --exclude=installer-${ARCH}/ --exclude=Contents-${ARCH}.gz --exclude=Contents-udeb-${ARCH}.gz --exclude=Contents-${ARCH}.diff/ --exclude=arch-${ARCH}.files --exclude=arch-${ARCH}.list.gz --exclude=*_${ARCH}.deb --exclude=*_${ARCH}.udeb --exclude=*_${ARCH}.changes"
     if [ "${ARCH}" = "source" ]; then
         if [ -z ${SOURCE_EXCLUDE} ]; then
-            SOURCE_EXCLUDE=" --exclude source/ --exclude *.tar.gz --exclude *.diff.gz --exclude *.tar.bz2 --exclude *.tar.xz --exclude *.diff.bz2 --exclude *.dsc "
+            SOURCE_EXCLUDE=" --exclude=source/ --exclude=*.tar.gz --exclude=*.diff.gz --exclude=*.tar.bz2 --exclude=*.tar.xz --exclude=*.diff.bz2 --exclude=*.dsc "
         fi
     fi
 done
