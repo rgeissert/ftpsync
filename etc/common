@@ -232,3 +232,12 @@ savelog() {
     done
     mv "${torotate}" "${torotate}.0"
 }
+
+# Return rsync version
+rsync_protocol() {
+    RSYNC_VERSION="$(${RSYNC} --version)"
+    if [[ $RSYNC_VERSION =~ (protocol[ ]+version[ ]+([0-9]+)) ]]; then
+        echo ${BASH_REMATCH[2]}
+    fi
+    unset RSYNC_VERSION
+}
