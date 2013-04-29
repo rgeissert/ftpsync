@@ -124,12 +124,6 @@
 ## limit I/O bandwidth. Value is KBytes per second, unset or 0 means unlimited
 #RSYNC_BW=""
 
-## Method used to delete files: "delay" or "after". "delay" is
-## recommended and is the default if no value is set and rsync 3 is
-## detected. NOTE: for this to work, neither --delete-after nor
-## --delete-delay should be set in RSYNC_OPTIONS2 (below).
-#RSYNC_DELETE_METHOD=""
-
 ## BE VERY CAREFUL WHEN YOU CHANGE THE RSYNC_OPTIONS! BETTER DON'T!
 ## BE VERY CAREFUL WHEN YOU CHANGE THE RSYNC_OPTIONS! BETTER DON'T!
 ## BE VERY CAREFUL WHEN YOU CHANGE THE RSYNC_OPTIONS! BETTER DON'T!
