@@ -323,9 +323,11 @@ RSYNC_EXTRA=${RSYNC_EXTRA:-""}
 RSYNC_OPTIONS="${RSYNC_EXTRA} --bwlimit=${RSYNC_BW} ${RSYNC_OPTIONS}"
 
 # Finally, make sure RSYNC_OPTIONS2 has either --delete-after or --deleter-delay
-if ! [[ ${RSYNC_OPTIONS2} =~ --delete-(after|delay) ]]; then
+RSYNC_OPTION_REGEX="--delete-(after|delay)"
+if ! [[ ${RSYNC_OPTIONS2} =~ ${RSYNC_OPTION_REGEX} ]]; then
     RSYNC_OPTIONS2+=" --delete-${RSYNC_DELETE_METHOD}"
 fi
+unset RSYNC_OPTION_REGEX
 
 # We have no default host to sync from, but will error out if its unset
 RSYNC_HOST=${RSYNC_HOST:-""}
