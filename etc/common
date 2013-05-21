@@ -236,8 +236,9 @@ savelog() {
 # Return rsync version
 rsync_protocol() {
     RSYNC_VERSION="$(${RSYNC} --version)"
-    if [[ $RSYNC_VERSION =~ (protocol[ ]+version[ ]+([0-9]+)) ]]; then
+    RSYNC_REGEX="(protocol[ ]+version[ ]+([0-9]+))"    
+    if [[ ${RSYNC_VERSION} =~ ${RSYNC_REGEX} ]]; then
         echo ${BASH_REMATCH[2]}
     fi
-    unset RSYNC_VERSION
+    unset RSYNC_VERSION RSYNC_REGEX
 }
