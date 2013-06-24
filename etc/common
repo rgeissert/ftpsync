@@ -1,4 +1,5 @@
 # -*- mode:sh -*-
+# vim:syn=sh
 # Little common functions
 
 # push a mirror attached to us.
