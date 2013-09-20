@@ -95,7 +95,12 @@ signal () {
         # Default normal "fire and forget" push. We background that, we do not care about the mirrors doings
         log "Sending normal push" >> "${LOGDIR}/${MIRROR}.log"
         PUSHARGS1="sync:all"
-        ssh -f $SSH_OPTIONS "${HOSTNAME}" "${PUSHARGS} ${PUSHARGS1}" >>"${LOGDIR}/${MIRROR}.log"
+        ssh -n $SSH_OPTIONS "${HOSTNAME}" "${PUSHARGS} ${PUSHARGS1}" >>"${LOGDIR}/${MIRROR}.log" 2>&1
+        if [ $? -eq 255 ]; then
+            error "Trigger to ${HOSTNAME} failed"  >> "${LOG}"
+        else
+            log "Trigger to ${HOSTNAME} succeed" >> "${LOG}"
+        fi
     elif [ "xstagedx" = "x${PUSHTYPE}x" ] || [ "xmhopx" = "x${PUSHTYPE}x" ]; then
         # Want a staged push. Fine, lets do that. Not backgrounded. We care about the mirrors doings.
         log "Sending staged push" >> "${LOGDIR}/${MIRROR}.log"
@@ -105,6 +110,11 @@ signal () {
             # Step1: Do a push to only sync stage1, do not background
             PUSHARGS1="sync:stage1"
             ssh $SSH_OPTIONS "${HOSTNAME}" "${PUSHARGS} ${PUSHARGS1}" >>"${LOGDIR}/${MIRROR}.log" 2>&1
+            if [ $? -eq 255 ]; then
+                error "Trigger to ${HOSTNAME} failed"  >> "${LOG}"
+            else
+                log "Trigger to ${HOSTNAME} succeed" >> "${LOG}"
+            fi
             touch "${PUSHLOCKOWN}"
 
             # Step2: Wait for all the other "lock"files to appear.
@@ -153,6 +163,11 @@ signal () {
             PUSHARGS2="sync:stage2"
             log "Now doing the second stage push" >> "${LOGDIR}/${MIRROR}.log"
             ssh $SSH_OPTIONS "${HOSTNAME}" "${PUSHARGS} ${PUSHARGS2}" >>"${LOGDIR}/${MIRROR}.log" 2>&1
+            if [ $? -eq 255 ]; then
+                error "Trigger to ${HOSTNAME} failed"  >> "${LOG}"
+            else
+                log "Trigger to ${HOSTNAME} succeed" >> "${LOG}"
+            fi
         fi
     else
         # Can't decide? Then you get nothing.
