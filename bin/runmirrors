@@ -108,7 +108,7 @@ LOGROTATE=${LOGROTATE:-14}
 # Our mirrorfile
 MIRRORS=${MIRRORS:-"${BASEDIR}/etc/${NAME}.mirror"}
 # used by log()
-PROGRAM=${PROGRAM:-"${NAME}-$(hostname -s)"}
+PROGRAM=${PROGRAM:-"${NAME}"}
 # extra ssh options we might want hostwide
 SSH_OPTS=${SSH_OPTS:-"-o StrictHostKeyChecking=no"}
 # Whats our archive name? We will also tell our leafs about it

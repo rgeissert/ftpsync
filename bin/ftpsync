@@ -246,7 +246,7 @@ LOG=${LOG:-"${LOGDIR}/${NAME}.log"}
 TO=${TO:-"/srv/mirrors/debian/"}
 
 # used by log() and error()
-PROGRAM=${PROGRAM:-"${NAME}-$(hostname -s)"}
+PROGRAM=${PROGRAM:-"${NAME}"}
 
 # Where to send mails about mirroring to?
 if [ "x$(hostname -d)x" != "xdebian.orgx" ]; then
