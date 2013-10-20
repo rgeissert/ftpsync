@@ -246,7 +246,9 @@ savelog() {
         fi
         count=$prev
     done
-    mv "${torotate}" "${torotate}.0"
+    if [ -e "${torotate}" ]; then
+        mv "${torotate}" "${torotate}.0"
+    fi
 }
 
 # Return rsync version
