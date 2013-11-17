@@ -327,7 +327,23 @@ RSYNC_OPTION_REGEX="--delete-(after|delay)"
 if ! [[ ${RSYNC_OPTIONS2} =~ ${RSYNC_OPTION_REGEX} ]]; then
     RSYNC_OPTIONS2+=" --delete-${RSYNC_DELETE_METHOD}"
 fi
+RSYNC_OPTION_REGEX="--delay-updates"
+# And that it also has --delay-updates
+if ! [[ ${RSYNC_OPTIONS2} =~ ${RSYNC_OPTION_REGEX} ]]; then
+    RSYNC_OPTIONS2+=" --delay-updates"
+fi
 unset RSYNC_OPTION_REGEX
+
+# Now check for options that can lead to an inconsistent mirror
+RSYNC_BADOPTS_REGEX="--(del(ete)?|inplace)"
+if [[ ${RSYNC_OPTIONS1} =~ ${RSYNC_BADOPTS_REGEX} ]]; then
+    error "Option '$BASH_REMATCH' (in RSYNC_OPTIONS1) breaks the mirror's consistency"
+fi
+RSYNC_BADOPTS_REGEX="--(delete-(during|before)|del\b|inplace)"
+if [[ ${RSYNC_OPTIONS2} =~ ${RSYNC_BADOPTS_REGEX} ]]; then
+    error "Option '$BASH_REMATCH' (in RSYNC_OPTIONS2) breaks the mirror's consistency"
+fi
+unset RSYNC_BADOPTS_REGEX
 
 # We have no default host to sync from, but will error out if its unset
 RSYNC_HOST=${RSYNC_HOST:-""}
