@@ -61,7 +61,7 @@ functionality:
    The archive mirroring must be done in 2 stages. The first rsync run
    must ignore the index files.  The correct exclude options for the
    first rsync run are:
-  --exclude Packages* --exclude Sources* --exclude Release* --exclude ls-lR*
+  --exclude Packages* --exclude Sources* --exclude Release* --exclude=InRelease --exclude=i18n/* --exclude ls-lR*
    The first stage must not delete any files.
 
    The second stage should then transfer the above excluded files and
