@@ -107,21 +107,6 @@ cleanup() {
     # all done. Mail the log, exit.
     log "Mirrorsync done";
 
-    # Lets get a statistical value
-    SPEED="unknown"
-    if [ -f "${LOGDIR}/rsync-${NAME}.log" ]; then
-        SPEED=$(
-            SPEEDLINE=$(egrep '[0-9.]+ bytes/sec' "${LOGDIR}/rsync-${NAME}.log")
-            set "nothing" ${SPEEDLINE}
-            echo ${8:-""}
-        )
-        if [ -n "${SPEED}" ]; then
-            SPEED=${SPEED%%.*}
-            SPEED=$(( $SPEED / 1024 ))
-        fi
-    fi
-    log "Rsync transfer speed: ${SPEED} KB/s"
-
     if [ -n "${MAILTO}" ]; then
         # In case rsync had something on stderr
         if [ -s "${LOGDIR}/rsync-${NAME}.error" ]; then
@@ -149,6 +134,22 @@ cleanup() {
 check_rsync() {
     ret=$1
     msg=$2
+
+    # Lets get a statistical value
+    SPEED="unknown"
+    if [ -f "${LOGDIR}/rsync-${NAME}.log" ]; then
+        SPEED=$(
+            SPEEDLINE=$(egrep '[0-9.,]+ bytes/sec' "${LOGDIR}/rsync-${NAME}.log" | tail -n 1)
+            set "nothing" ${SPEEDLINE}
+            echo ${8:-""}
+        )
+        if [ -n "${SPEED}" ]; then
+            SPEED=${SPEED%%.*}
+            SPEED=${SPEED//,}
+            SPEED=$(( $SPEED / 1024 ))
+        fi
+    fi
+    log "Latest recorded rsync transfer speed: ${SPEED} KB/s"
 
     # 24 - vanished source files. Ignored, that should be the target of $UPDATEREQUIRED
     # and us re-running. If it's not, uplink is broken anyways.
