@@ -281,7 +281,8 @@ TRACE=${TRACE:-"project/trace/${MIRRORNAME}"}
 # what it will be.
 # Possible values are
 # "full"  - all information
-# "terse" - basic, timestamp only (date -u)
+# "terse" - partial, ftpsync version and local hostname
+# "date"  - basic, timestamp only (date -u)
 # "touch" - just touch the file in existance
 # "none"  - no tracefile at all
 #
@@ -608,26 +609,30 @@ if [ "xtruex" = "x${SYNCSTAGE2}x" ] || [ "xtruex" = "x${SYNCALL}x" ]; then
             log "Just touching the trace file"
             touch "${TO}/${TRACE}"
             ;;
-        terse|full)
+        date|terse|full)
             log "Creating a ${EXTENDEDTRACE} trace file"
             if [ -d "$(dirname "${TO}/${TRACE}")" ]; then
-                LC_ALL=POSIX LANG=POSIX date -u > "${TO}/${TRACE}.new"
-                echo "Used ftpsync version: ${VERSION}" >> "${TO}/${TRACE}.new"
-                echo "Running on host: $(hostname -f)" >> "${TO}/${TRACE}.new"
-                if [ "xfullx" = "x${EXTENDEDTRACE}x" ]; then
-                    GLOBALARCHLIST="source amd64 armel armhf hurd-i386 i386 ia64 kfreebsd-amd64 kfreebsd-i386 mips mipsel powerpc s390 s390x sparc"
+                {
+                    LC_ALL=POSIX LANG=POSIX date -u
+                    if [ "xdatex" != "x${EXTENDEDTRACE}x" ]; then
+                        echo "Used ftpsync version: ${VERSION}"
+                        echo "Running on host: ${TRACEHOST:-$(hostname -f)}"
+                        if [ "xfullx" = "x${EXTENDEDTRACE}x" ]; then
+                            GLOBALARCHLIST="source amd64 armel armhf hurd-i386 i386 ia64 kfreebsd-amd64 kfreebsd-i386 mips mipsel powerpc s390 s390x sparc"
 
-                    AEXCLUDE="^${ARCH_EXCLUDE// /\$|^}$"
-                    ARCHLIST=""
-                    for ARCH in ${GLOBALARCHLIST}; do
-                        if ! [[ ${ARCH} =~ ${AEXCLUDE} ]]; then
-                            ARCHLIST="${ARCHLIST} ${ARCH}"
-                        fi
-                    done
-                    out="GUESSED:{${ARCHLIST}}"
-                    echo "Architectures: ${out}" >> "${TO}/${TRACE}.new"
-                    echo "Upstream-mirror: ${RSYNC_HOST}" >> "${TO}/${TRACE}.new"
-                fi # full trace
+                            AEXCLUDE="^${ARCH_EXCLUDE// /\$|^}$"
+                            ARCHLIST=""
+                            for ARCH in ${GLOBALARCHLIST}; do
+                                if ! [[ ${ARCH} =~ ${AEXCLUDE} ]]; then
+                                    ARCHLIST="${ARCHLIST} ${ARCH}"
+                                fi
+                            done
+                            out="GUESSED:{${ARCHLIST}}"
+                            echo "Architectures: ${out}"
+                            echo "Upstream-mirror: ${RSYNC_HOST}"
+                        fi # full trace
+                    fi # other traces
+                } > "${TO}/${TRACE}.new"
                 mv "${TO}/${TRACE}.new" "${TO}/${TRACE}"
             fi
             ;;

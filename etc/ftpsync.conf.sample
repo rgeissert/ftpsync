@@ -6,7 +6,7 @@
 ########################################################################
 ########################################################################
 
-## Mirrorname. This is used for things like the trace file and should always
+## Mirrorname. This is used for things like the trace file name and should always
 ## be the full hostname of the mirror.
 #MIRRORNAME=`hostname -f`
 
@@ -108,12 +108,16 @@
 ## what it will be.
 ## Possible values are
 ## "full"  - all information
-## "terse" - basic, timestamp only (date -u)
+## "terse" - partial, ftpsync version and local hostname
+## "date"  - basic, timestamp only (date -u)
 ## "touch" - just touch the file in existance
 ## "none"  - no tracefile at all
 ##
 ## Default and required value for Debian mirrors is full.
 #EXTENDEDTRACE="full"
+
+## The local hostname to be written to the trace file.
+#TRACEHOST="$(hostname -f)"
 
 ## We sync our mirror using rsync (everything else would be insane), so
 ## we need a few options set.
