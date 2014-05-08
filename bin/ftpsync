@@ -110,7 +110,7 @@ cleanup() {
     if [ -n "${MAILTO}" ]; then
         # In case rsync had something on stderr
         if [ -s "${LOGDIR}/rsync-${NAME}.error" ]; then
-            mail -e -s "[${PROGRAM}@$(hostname -s)] ($$) rsync ERROR on $(date +"%Y.%m.%d-%H:%M:%S")" ${MAILTO} < "${LOGDIR}/rsync-${NAME}.error"
+            mail -E -s "[${PROGRAM}@$(hostname -s)] ($$) rsync ERROR on $(date +"%Y.%m.%d-%H:%M:%S")" ${MAILTO} < "${LOGDIR}/rsync-${NAME}.error"
         fi
         if [ "x${ERRORSONLY}x" = "xfalsex" ]; then
             # And the normal log
@@ -119,7 +119,7 @@ cleanup() {
                 # Someone wants full logs including rsync
                 MAILFILES="${MAILFILES} ${LOGDIR}/rsync-${NAME}.log"
             fi
-            cat ${MAILFILES} | mail -e -s "[${PROGRAM}@$(hostname -s)] archive sync finished on $(date +"%Y.%m.%d-%H:%M:%S")" ${MAILTO}
+            cat ${MAILFILES} | mail -E -s "[${PROGRAM}@$(hostname -s)] archive sync finished on $(date +"%Y.%m.%d-%H:%M:%S")" ${MAILTO}
         fi
     fi
 
@@ -675,7 +675,7 @@ if [ -r "${TO}/project/ftpsync/LATEST.VERSION" ]; then
             fi
             if [ ${difference} -ge 259200 ]; then
                 # Only warn every third day
-                mail -e -s "[$(hostname -s)] Update for ftpsync available" ${MAILTO} <<EOF
+                mail -s "[$(hostname -s)] Update for ftpsync available" ${MAILTO} <<EOF
 Hello admin,
 
 i found that there is a new version of me available.
