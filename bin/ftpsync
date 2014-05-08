@@ -289,6 +289,9 @@ TRACE=${TRACE:-"project/trace/${MIRRORNAME}"}
 # Default and required value for Debian mirrors is full.
 EXTENDEDTRACE=${EXTENDEDTRACE:-"full"}
 
+# The local hostname to be written to the trace file.
+TRACEHOST=${TRACEHOST:-$(hostname -f)}
+
 # rsync program
 RSYNC=${RSYNC:-rsync}
 # Rsync filter rules. Used to protect various files we always want to keep, even if we otherwise delete
@@ -616,7 +619,7 @@ if [ "xtruex" = "x${SYNCSTAGE2}x" ] || [ "xtruex" = "x${SYNCALL}x" ]; then
                     LC_ALL=POSIX LANG=POSIX date -u
                     if [ "xdatex" != "x${EXTENDEDTRACE}x" ]; then
                         echo "Used ftpsync version: ${VERSION}"
-                        echo "Running on host: ${TRACEHOST:-$(hostname -f)}"
+                        echo "Running on host: ${TRACEHOST}"
                         if [ "xfullx" = "x${EXTENDEDTRACE}x" ]; then
                             GLOBALARCHLIST="source amd64 armel armhf hurd-i386 i386 ia64 kfreebsd-amd64 kfreebsd-i386 mips mipsel powerpc s390 s390x sparc"
 
