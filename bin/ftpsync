@@ -28,10 +28,10 @@ set -E
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 # In case the admin somehow wants to have this script located someplace else,
-# he can set BASEDIR, and we will take that. If it is unset we take ${HOME}
+# he can set BASEDIR, and we will take that. If it is unset we use $0
 # How the admin sets this isn't our place to deal with. One could use a wrapper
 # for that. Or pam_env. Or whatever fits in the local setup. :)
-BASEDIR=${BASEDIR:-"${HOME}"}
+BASEDIR=${BASEDIR:-"$(readlink -f $(dirname "$0")/..)"}
 
 # Script version. DO NOT CHANGE, *unless* you change the master copy maintained
 # by Joerg Jaspert and the Debian mirroradm group.
