@@ -64,10 +64,11 @@
 ## If you do want to exclude an architecture, this is for you.
 ## Use as space seperated list.
 ## Possible values are:
-## alpha, amd64, arm, armel, armhf, hppa, hurd-i386, i386, ia64, kfreebsd-amd64,
-## kfreebsd-i386, m68k, mipsel, mips, powerpc, s390, s390x, sh, sparc and source
-## eg. ARCH_EXCLUDE="alpha arm armel mipsel mips s390 sparc"
+## alpha amd64 arm arm64 armel armhf hppa hurd-i386 i386 ia64 kfreebsd-amd64
+## kfreebsd-i386 m68k mipsel mips powerpc s390 s390x sh sparc source
+## eg. ARCH_EXCLUDE="alpha arm arm64 armel mipsel mips s390 sparc"
 ## An unset value will mirror all architectures (default!)
+## Notice: source shall not be excluded on an official mirror
 #ARCH_EXCLUDE=""
 
 ## Do we have leaf mirror to signal we are done and they should sync?
