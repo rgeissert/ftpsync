@@ -620,7 +620,7 @@ if [ "xtruex" = "x${SYNCSTAGE2}x" ] || [ "xtruex" = "x${SYNCALL}x" ]; then
                         echo "Used ftpsync version: ${VERSION}"
                         echo "Running on host: ${TRACEHOST}"
                         if [ "xfullx" = "x${EXTENDEDTRACE}x" ]; then
-                            GLOBALARCHLIST="source amd64 armel armhf hurd-i386 i386 ia64 kfreebsd-amd64 kfreebsd-i386 mips mipsel powerpc s390 s390x sparc"
+                            GLOBALARCHLIST="source amd64 arm64 armel armhf hurd-i386 i386 ia64 kfreebsd-amd64 kfreebsd-i386 mips mipsel powerpc s390 s390x sparc"
 
                             AEXCLUDE="^${ARCH_EXCLUDE// /\$|^}$"
                             ARCHLIST=""
