@@ -118,7 +118,7 @@
 #EXTENDEDTRACE="full"
 
 ## The local hostname to be written to the trace file.
-#TRACEHOST="$(hostname -f)"
+#TRACEHOST="${MIRRORNAME}"
 
 ## We sync our mirror using rsync (everything else would be insane), so
 ## we need a few options set.

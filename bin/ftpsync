@@ -289,7 +289,7 @@ TRACE=${TRACE:-"project/trace/${MIRRORNAME}"}
 EXTENDEDTRACE=${EXTENDEDTRACE:-"full"}
 
 # The local hostname to be written to the trace file.
-TRACEHOST=${TRACEHOST:-$(hostname -f)}
+TRACEHOST=${TRACEHOST:-${MIRRORNAME}}
 
 # rsync program
 RSYNC=${RSYNC:-rsync}
