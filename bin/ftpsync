@@ -620,16 +620,20 @@ if [ "xtruex" = "x${SYNCSTAGE2}x" ] || [ "xtruex" = "x${SYNCALL}x" ]; then
                         echo "Used ftpsync version: ${VERSION}"
                         echo "Running on host: ${TRACEHOST}"
                         if [ "xfullx" = "x${EXTENDEDTRACE}x" ]; then
-                            GLOBALARCHLIST="source amd64 arm64 armel armhf hurd-i386 i386 ia64 kfreebsd-amd64 kfreebsd-i386 mips mipsel powerpc s390 s390x sparc"
+                            if [ "x${ARCH_EXCLUDE}x" = "xx" ]; then
+                                out="FULL"
+                            else
+                                GLOBALARCHLIST="source amd64 arm64 armel armhf hurd-i386 i386 ia64 kfreebsd-amd64 kfreebsd-i386 mips mipsel powerpc s390 s390x sparc"
 
-                            AEXCLUDE="^${ARCH_EXCLUDE// /\$|^}$"
-                            ARCHLIST=""
-                            for ARCH in ${GLOBALARCHLIST}; do
-                                if ! [[ ${ARCH} =~ ${AEXCLUDE} ]]; then
-                                    ARCHLIST="${ARCHLIST} ${ARCH}"
-                                fi
-                            done
-                            out="GUESSED:{${ARCHLIST}}"
+                                AEXCLUDE="^${ARCH_EXCLUDE// /\$|^}$"
+                                ARCHLIST=""
+                                for ARCH in ${GLOBALARCHLIST}; do
+                                    if ! [[ ${ARCH} =~ ${AEXCLUDE} ]]; then
+                                        ARCHLIST="${ARCHLIST} ${ARCH}"
+                                    fi
+                                done
+                                out="GUESSED:{${ARCHLIST}}"
+                            fi
                             echo "Architectures: ${out}"
                             echo "Upstream-mirror: ${RSYNC_HOST}"
                         fi # full trace
