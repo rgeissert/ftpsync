@@ -227,7 +227,8 @@ fi
 # mirrorring. Use as space seperated list.                             #
 # Possible values are:                                                 #
 # alpha amd64 arm arm64 armel armhf hppa hurd-i386 i386 ia64 mips      #
-# mipsel powerpc s390 s390x sparc kfreebsd-i386 kfreebsd-amd64 source  #
+# mipsel powerpc ppc64el s390 s390x sparc kfreebsd-i386 kfreebsd-amd64 #
+# source                                                               #
 # eg. ARCH_EXCLUDE="arm arm64 armel mipsel mips s390 s390x sparc"      #
 #                                                                      #
 # An unset value will mirror all architectures                         #
@@ -620,7 +621,7 @@ if [ "xtruex" = "x${SYNCSTAGE2}x" ] || [ "xtruex" = "x${SYNCALL}x" ]; then
                         echo "Used ftpsync version: ${VERSION}"
                         echo "Running on host: ${TRACEHOST}"
                         if [ "xfullx" = "x${EXTENDEDTRACE}x" ]; then
-                            GLOBALARCHLIST="source amd64 arm64 armel armhf hurd-i386 i386 ia64 kfreebsd-amd64 kfreebsd-i386 mips mipsel powerpc s390 s390x sparc"
+                            GLOBALARCHLIST="source amd64 arm64 armel armhf hurd-i386 i386 ia64 kfreebsd-amd64 kfreebsd-i386 mips mipsel powerpc ppc64el s390 s390x sparc"
 
                             AEXCLUDE="^${ARCH_EXCLUDE// /\$|^}$"
                             ARCHLIST=""
